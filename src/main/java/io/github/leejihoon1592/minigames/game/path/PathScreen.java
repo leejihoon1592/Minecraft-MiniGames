@@ -1018,6 +1018,19 @@ public class PathScreen extends Screen {
         PathSegment.Point end =
                 path.getPointAtProgress(1.0);
 
+        /*
+         * START 방향은 첫 번째 세그먼트,
+         * END 방향은 마지막 세그먼트를 기준으로 한다.
+         */
+
+        PathSegment firstSegment =
+                path.getSegments().get(0);
+
+        PathSegment lastSegment =
+                path.getSegments().get(
+                        path.getSegments().size() - 1
+                );
+
         int halfThickness =
                 PATH_THICKNESS / 2;
 
@@ -1033,21 +1046,105 @@ public class PathScreen extends Screen {
         int endY =
                 (int) Math.round(end.y());
 
-        graphics.fill(
-                startX - 3,
-                startY - halfThickness,
-                startX + 3,
-                startY + halfThickness,
-                START_COLOR
-        );
+        /*
+         * =========================
+         * START
+         * =========================
+         *
+         * 진행 방향이 가로라면
+         * START 선은 세로로 그린다.
+         *
+         * 진행 방향이 세로라면
+         * START 선은 가로로 그린다.
+         */
 
-        graphics.fill(
-                endX - 3,
-                endY - halfThickness,
-                endX + 3,
-                endY + halfThickness,
-                END_COLOR
-        );
+        double startDeltaX =
+                firstSegment.getEndX()
+                        - firstSegment.getStartX();
+
+        double startDeltaY =
+                firstSegment.getEndY()
+                        - firstSegment.getStartY();
+
+        if (Math.abs(startDeltaX)
+                >= Math.abs(startDeltaY)) {
+
+            /*
+             * 가로 진행 → 세로 START
+             */
+
+            graphics.fill(
+                    startX - 3,
+                    startY - halfThickness,
+                    startX + 3,
+                    startY + halfThickness,
+                    START_COLOR
+            );
+
+        } else {
+
+            /*
+             * 세로 진행 → 가로 START
+             */
+
+            graphics.fill(
+                    startX - halfThickness,
+                    startY - 3,
+                    startX + halfThickness,
+                    startY + 3,
+                    START_COLOR
+            );
+        }
+
+        /*
+         * =========================
+         * END
+         * =========================
+         *
+         * 마지막 진행 방향이 가로라면
+         * END 선은 세로로 그린다.
+         *
+         * 마지막 진행 방향이 세로라면
+         * END 선은 가로로 그린다.
+         */
+
+        double endDeltaX =
+                lastSegment.getEndX()
+                        - lastSegment.getStartX();
+
+        double endDeltaY =
+                lastSegment.getEndY()
+                        - lastSegment.getStartY();
+
+        if (Math.abs(endDeltaX)
+                >= Math.abs(endDeltaY)) {
+
+            /*
+             * 가로 진행 → 세로 END
+             */
+
+            graphics.fill(
+                    endX - 3,
+                    endY - halfThickness,
+                    endX + 3,
+                    endY + halfThickness,
+                    END_COLOR
+            );
+
+        } else {
+
+            /*
+             * 세로 진행 → 가로 END
+             */
+
+            graphics.fill(
+                    endX - halfThickness,
+                    endY - 3,
+                    endX + halfThickness,
+                    endY + 3,
+                    END_COLOR
+            );
+        }
     }
 
     /*
@@ -1094,12 +1191,44 @@ public class PathScreen extends Screen {
         PathSegment.Point start =
                 path.getPointAtProgress(0.0);
 
-        return distance(
-                mouseX,
-                mouseY,
-                start.x(),
-                start.y()
-        ) <= PATH_THICKNESS / 2.0;
+        PathSegment firstSegment =
+                path.getSegments().get(0);
+
+        double deltaX =
+                firstSegment.getEndX()
+                        - firstSegment.getStartX();
+
+        double deltaY =
+                firstSegment.getEndY()
+                        - firstSegment.getStartY();
+
+        double markerHalfWidth = 3.0;
+        double pathHalfWidth =
+                PATH_THICKNESS / 2.0;
+
+        /*
+         * 첫 번째 세그먼트가 가로 방향이면
+         * START는 세로선이다.
+         */
+
+        if (Math.abs(deltaX)
+                >= Math.abs(deltaY)) {
+
+            return mouseX >= start.x() - markerHalfWidth
+                    && mouseX <= start.x() + markerHalfWidth
+                    && mouseY >= start.y() - pathHalfWidth
+                    && mouseY <= start.y() + pathHalfWidth;
+        }
+
+        /*
+         * 첫 번째 세그먼트가 세로 방향이면
+         * START는 가로선이다.
+         */
+
+        return mouseX >= start.x() - pathHalfWidth
+                && mouseX <= start.x() + pathHalfWidth
+                && mouseY >= start.y() - markerHalfWidth
+                && mouseY <= start.y() + markerHalfWidth;
     }
 
     /*
@@ -1116,20 +1245,46 @@ public class PathScreen extends Screen {
         PathSegment.Point end =
                 path.getPointAtProgress(1.0);
 
+        PathSegment lastSegment =
+                path.getSegments().get(
+                        path.getSegments().size() - 1
+                );
+
+        double deltaX =
+                lastSegment.getEndX()
+                        - lastSegment.getStartX();
+
+        double deltaY =
+                lastSegment.getEndY()
+                        - lastSegment.getStartY();
+
+        double markerHalfWidth = 3.0;
+        double pathHalfWidth =
+                PATH_THICKNESS / 2.0;
+
         /*
-         * 화면에 표시되는 END 빨간선의
-         * 실제 두께를 기준으로 판정한다.
-         *
-         * END 선은 현재 중심 기준
-         * 좌우 3px 폭으로 그려진다.
+         * 마지막 세그먼트가 가로 방향이면
+         * END는 세로선이다.
          */
 
-        double endHalfWidth = 3.0;
+        if (Math.abs(deltaX)
+                >= Math.abs(deltaY)) {
 
-        return mouseX >= end.x() - endHalfWidth
-                && mouseX <= end.x() + endHalfWidth
-                && mouseY >= end.y() - PATH_THICKNESS / 2.0
-                && mouseY <= end.y() + PATH_THICKNESS / 2.0;
+            return mouseX >= end.x() - markerHalfWidth
+                    && mouseX <= end.x() + markerHalfWidth
+                    && mouseY >= end.y() - pathHalfWidth
+                    && mouseY <= end.y() + pathHalfWidth;
+        }
+
+        /*
+         * 마지막 세그먼트가 세로 방향이면
+         * END는 가로선이다.
+         */
+
+        return mouseX >= end.x() - pathHalfWidth
+                && mouseX <= end.x() + pathHalfWidth
+                && mouseY >= end.y() - markerHalfWidth
+                && mouseY <= end.y() + markerHalfWidth;
     }
 
     /*
