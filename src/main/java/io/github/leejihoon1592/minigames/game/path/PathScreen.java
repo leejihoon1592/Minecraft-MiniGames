@@ -110,6 +110,7 @@ public class PathScreen extends Screen {
     private boolean currentlyInsidePath = false;
 
     private int missCount = 0;
+    private PathResult result = null;
 
     /*
      * =========================
@@ -493,6 +494,8 @@ public class PathScreen extends Screen {
 
             state = GameState.FINISHED;
 
+            result = createResult();
+
             return;
         }
 
@@ -643,6 +646,38 @@ public class PathScreen extends Screen {
 
         return accuracyTotal
                 / accuracySampleCount;
+    }
+
+    /*
+     * =========================
+     * 게임 결과 생성
+     * =========================
+     */
+
+    private PathResult createResult() {
+
+        int checkpointsPassed = 0;
+        int checkpointsDisabled = 0;
+
+        for (PathCheckpoint checkpoint : checkpoints) {
+
+            if (checkpoint.isPassed()) {
+                checkpointsPassed++;
+            }
+
+            if (checkpoint.isDisabled()) {
+                checkpointsDisabled++;
+            }
+        }
+
+        return new PathResult(
+                getAverageAccuracy(),
+                checkpointsPassed,
+                checkpointsDisabled,
+                checkpoints.size(),
+                missCount,
+                state == GameState.FINISHED
+        );
     }
 
     /*

@@ -36,6 +36,10 @@ public class PathResult {
         return accuracy;
     }
 
+    public double getQualityScore() {
+        return accuracy * 100.0;
+    }
+
     public int getCheckpointsPassed() {
         return checkpointsPassed;
     }
