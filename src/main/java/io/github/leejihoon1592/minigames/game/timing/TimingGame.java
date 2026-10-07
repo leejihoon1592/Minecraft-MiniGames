@@ -2,22 +2,23 @@ package io.github.leejihoon1592.minigames.game.timing;
 
 public class TimingGame {
 
-    private final int maxRounds;
+    private final TimingConfig config;
 
     private int currentRound;
     private int totalScore;
 
     private Judgement lastJudgement;
 
-    public TimingGame(int maxRounds) {
+    public TimingGame(TimingConfig config) {
 
-        if (maxRounds <= 0) {
+        if (config == null) {
             throw new IllegalArgumentException(
-                    "maxRounds must be greater than 0"
+                    "config must not be null"
             );
         }
 
-        this.maxRounds = maxRounds;
+        this.config = config;
+
         this.currentRound = 0;
         this.totalScore = 0;
         this.lastJudgement = null;
@@ -40,15 +41,15 @@ public class TimingGame {
 
         Judgement judgement;
 
-        if (distance <= 0.04) {
+        if (distance <= config.getFantasticRange()) {
 
             judgement = Judgement.FANTASTIC;
 
-        } else if (distance <= 0.1167) {
+        } else if (distance <= config.getPerfectRange()) {
 
             judgement = Judgement.PERFECT;
 
-        } else if (distance <= 0.20) {
+        } else if (distance <= config.getGoodRange()) {
 
             judgement = Judgement.GOOD;
 
@@ -58,10 +59,37 @@ public class TimingGame {
         }
 
         this.lastJudgement = judgement;
-        this.totalScore += judgement.getScore();
+
+        this.totalScore +=
+                getScore(judgement);
+
         this.currentRound++;
 
         return judgement;
+    }
+
+    /*
+     * =========================
+     * 판정별 점수
+     * =========================
+     */
+
+    public int getScore(Judgement judgement) {
+
+        return switch (judgement) {
+
+            case FANTASTIC ->
+                    config.getFantasticScore();
+
+            case PERFECT ->
+                    config.getPerfectScore();
+
+            case GOOD ->
+                    config.getGoodScore();
+
+            case MISS ->
+                    config.getMissScore();
+        };
     }
 
     /*
@@ -71,7 +99,7 @@ public class TimingGame {
      */
 
     public boolean isFinished() {
-        return currentRound >= maxRounds;
+        return currentRound >= config.getMaxRounds();
     }
 
     public int getCurrentRound() {
@@ -79,7 +107,7 @@ public class TimingGame {
     }
 
     public int getMaxRounds() {
-        return maxRounds;
+        return config.getMaxRounds();
     }
 
     public int getTotalScore() {
@@ -87,7 +115,8 @@ public class TimingGame {
     }
 
     public int getMaximumScore() {
-        return maxRounds * Judgement.FANTASTIC.getScore();
+        return config.getMaxRounds()
+                * config.getFantasticScore();
     }
 
     public double getAverageScore() {
@@ -103,6 +132,10 @@ public class TimingGame {
         return lastJudgement;
     }
 
+    public TimingConfig getConfig() {
+        return config;
+    }
+
     /*
      * =========================
      * 판정 종류
@@ -113,48 +146,37 @@ public class TimingGame {
 
         FANTASTIC(
                 "FANTASTIC!",
-                100,
                 0xFF55AAFF
         ),
 
         PERFECT(
                 "PERFECT!",
-                80,
                 0xFFE0B040
         ),
 
         GOOD(
                 "GOOD!",
-                50,
                 0xFF55FF55
         ),
 
         MISS(
                 "MISS!",
-                0,
                 0xFFFF5555
         );
 
         private final String displayName;
-        private final int score;
         private final int color;
 
         Judgement(
                 String displayName,
-                int score,
                 int color
         ) {
             this.displayName = displayName;
-            this.score = score;
             this.color = color;
         }
 
         public String getDisplayName() {
             return displayName;
-        }
-
-        public int getScore() {
-            return score;
         }
 
         public int getColor() {

@@ -1,5 +1,6 @@
 package io.github.leejihoon1592.minigames.client.screen;
 
+import io.github.leejihoon1592.minigames.game.timing.TimingConfig;
 import io.github.leejihoon1592.minigames.game.timing.TimingGame;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -11,23 +12,29 @@ public class TimingScreen extends Screen {
     private static final int BAR_WIDTH = 600;
     private static final int BAR_HEIGHT = 20;
 
-    private static final int GOOD_HALF_WIDTH = 60;
-    private static final int PERFECT_HALF_WIDTH = 35;
-    private static final int FANTASTIC_HALF_WIDTH = 12;
-
     private static final int POINTER_WIDTH = 4;
     private static final int POINTER_HEIGHT = 32;
 
-    private static final double TRAVEL_TIME_SECONDS = 1.5;
-
-    private static final int MAX_ROUNDS = 5;
+    private final TimingConfig config;
 
     private long startTime;
 
     private TimingGame game;
 
     public TimingScreen() {
+        this(TimingConfig.defaultConfig());
+    }
+
+    public TimingScreen(TimingConfig config) {
         super(Component.literal("Timing Game"));
+
+        if (config == null) {
+            throw new IllegalArgumentException(
+                    "config must not be null"
+            );
+        }
+
+        this.config = config;
     }
 
     @Override
@@ -35,7 +42,7 @@ public class TimingScreen extends Screen {
         super.init();
 
         this.startTime = System.nanoTime();
-        this.game = new TimingGame(MAX_ROUNDS);
+        this.game = new TimingGame(config);
     }
 
     @Override
@@ -50,10 +57,14 @@ public class TimingScreen extends Screen {
         int centerX = this.width / 2;
         int centerY = this.height / 2;
 
-        int barWidth = Math.min(BAR_WIDTH, this.width - 40);
+        int barWidth =
+                Math.min(BAR_WIDTH, this.width - 40);
 
-        int barX = centerX - barWidth / 2;
-        int barY = centerY - BAR_HEIGHT / 2;
+        int barX =
+                centerX - barWidth / 2;
+
+        int barY =
+                centerY - BAR_HEIGHT / 2;
 
         /*
          * =========================
@@ -109,42 +120,66 @@ public class TimingScreen extends Screen {
 
         /*
          * =========================
-         * GOOD
+         * 판정 영역
+         *
+         * Config의 정규화된 범위를
+         * 실제 화면 픽셀 크기로 변환한다.
          * =========================
          */
 
+        double halfBarWidth =
+                barWidth / 2.0;
+
+        int goodHalfWidth =
+                (int) Math.round(
+                        config.getGoodRange()
+                                * halfBarWidth
+                );
+
+        int perfectHalfWidth =
+                (int) Math.round(
+                        config.getPerfectRange()
+                                * halfBarWidth
+                );
+
+        int fantasticHalfWidth =
+                (int) Math.round(
+                        config.getFantasticRange()
+                                * halfBarWidth
+                );
+
+        /*
+         * GOOD
+         */
+
         graphics.fill(
-                centerX - GOOD_HALF_WIDTH,
+                centerX - goodHalfWidth,
                 barY,
-                centerX + GOOD_HALF_WIDTH,
+                centerX + goodHalfWidth,
                 barY + BAR_HEIGHT,
                 0xFF55AA55
         );
 
         /*
-         * =========================
          * PERFECT
-         * =========================
          */
 
         graphics.fill(
-                centerX - PERFECT_HALF_WIDTH,
+                centerX - perfectHalfWidth,
                 barY,
-                centerX + PERFECT_HALF_WIDTH,
+                centerX + perfectHalfWidth,
                 barY + BAR_HEIGHT,
                 0xFFE0B040
         );
 
         /*
-         * =========================
          * FANTASTIC
-         * =========================
          */
 
         graphics.fill(
-                centerX - FANTASTIC_HALF_WIDTH,
+                centerX - fantasticHalfWidth,
                 barY,
-                centerX + FANTASTIC_HALF_WIDTH,
+                centerX + fantasticHalfWidth,
                 barY + BAR_HEIGHT,
                 0xFF55AAFF
         );
@@ -158,16 +193,22 @@ public class TimingScreen extends Screen {
         if (!game.isFinished()) {
 
             int pointerCenterX =
-                    calculatePointerX(barX, barWidth);
+                    calculatePointerX(
+                            barX,
+                            barWidth
+                    );
 
             int pointerX =
-                    pointerCenterX - POINTER_WIDTH / 2;
+                    pointerCenterX
+                            - POINTER_WIDTH / 2;
 
             graphics.fill(
                     pointerX,
-                    barY - (POINTER_HEIGHT - BAR_HEIGHT) / 2,
+                    barY
+                            - (POINTER_HEIGHT - BAR_HEIGHT) / 2,
                     pointerX + POINTER_WIDTH,
-                    barY + BAR_HEIGHT
+                    barY
+                            + BAR_HEIGHT
                             + (POINTER_HEIGHT - BAR_HEIGHT) / 2,
                     0xFFFFFFFF
             );
@@ -203,7 +244,8 @@ public class TimingScreen extends Screen {
 
             graphics.drawCenteredString(
                     this.font,
-                    "Total: " + game.getTotalScore(),
+                    "Total: "
+                            + game.getTotalScore(),
                     centerX,
                     barY + 58,
                     0xFFFFFFFF
@@ -263,7 +305,8 @@ public class TimingScreen extends Screen {
             int button
     ) {
 
-        if (button == 0 && !game.isFinished()) {
+        if (button == 0
+                && !game.isFinished()) {
 
             submitTiming();
 
@@ -285,7 +328,8 @@ public class TimingScreen extends Screen {
 
     private void submitTiming() {
 
-        int centerX = this.width / 2;
+        int centerX =
+                this.width / 2;
 
         int barWidth =
                 Math.min(
@@ -302,22 +346,22 @@ public class TimingScreen extends Screen {
                         barWidth
                 );
 
-        /*
-         * 중앙에서 얼마나 떨어졌는지를
-         * 바 절반 길이를 기준으로 0.0 ~ 1.0으로 변환
-         *
-         * 중앙 = 0.0
-         * 끝   = 1.0
-         */
-
         double halfBarWidth =
                 barWidth / 2.0;
 
-        double distanceFromCenter =
-                Math.abs(pointerCenterX - centerX)
-                        / halfBarWidth;
+        /*
+         * 중앙 = 0.0
+         * 바 끝 = 1.0
+         */
 
-        game.submit(distanceFromCenter);
+        double distanceFromCenter =
+                Math.abs(
+                        pointerCenterX - centerX
+                ) / halfBarWidth;
+
+        game.submit(
+                distanceFromCenter
+        );
     }
 
     /*
@@ -332,12 +376,13 @@ public class TimingScreen extends Screen {
     ) {
 
         double elapsedSeconds =
-                (System.nanoTime() - this.startTime)
+                (System.nanoTime()
+                        - this.startTime)
                         / 1_000_000_000.0;
 
         double cycle =
                 elapsedSeconds
-                        / TRAVEL_TIME_SECONDS;
+                        / config.getTravelTimeSeconds();
 
         double cyclePosition =
                 cycle % 2.0;
@@ -346,11 +391,13 @@ public class TimingScreen extends Screen {
 
         if (cyclePosition <= 1.0) {
 
-            progress = cyclePosition;
+            progress =
+                    cyclePosition;
 
         } else {
 
-            progress = 2.0 - cyclePosition;
+            progress =
+                    2.0 - cyclePosition;
         }
 
         progress =
