@@ -6,6 +6,7 @@ import net.minecraft.network.chat.Component;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.ArrayList;
 
 public class PathScreen extends Screen {
 
@@ -120,6 +121,38 @@ public class PathScreen extends Screen {
 
     private double progress = 0.0;
     private double restartProgress = 0.0;
+
+    /*
+     * =========================
+     * 플레이어 Trail
+     * =========================
+     */
+
+    /*
+     * 실제 마우스가 지나간 위치를 저장한다.
+     *
+     * Trail은 시각적 표현만 담당하며
+     * Path 판정이나 Accuracy 계산에는
+     * 사용하지 않는다.
+     */
+
+    private final List<PathSegment.Point> trailPoints =
+            new ArrayList<>();
+
+    /*
+     * Trail 좌표 기록 간격
+     */
+
+    private static final double TRAIL_SAMPLE_DISTANCE = 3.0;
+
+    /*
+     * 마지막으로 Trail에 기록한 마우스 좌표
+     */
+
+    private double lastTrailMouseX = 0.0;
+    private double lastTrailMouseY = 0.0;
+
+    private boolean hasTrailPoint = false;
 
     /*
      * =========================
@@ -630,6 +663,81 @@ public class PathScreen extends Screen {
 
         accuracyTotal += accuracy;
         accuracySampleCount++;
+    }
+
+    /*
+     * =========================
+     * Trail 기록
+     * =========================
+     */
+
+    private void updateTrail(
+            double mouseX,
+            double mouseY
+    ) {
+
+        /*
+         * 첫 번째 Trail 좌표
+         */
+
+        if (!hasTrailPoint) {
+
+            trailPoints.add(
+                    new PathSegment.Point(
+                            mouseX,
+                            mouseY
+                    )
+            );
+
+            lastTrailMouseX = mouseX;
+            lastTrailMouseY = mouseY;
+
+            hasTrailPoint = true;
+
+            return;
+        }
+
+        /*
+         * 마지막 기록 위치에서
+         * 얼마나 이동했는지 계산한다.
+         */
+
+        double deltaX =
+                mouseX - lastTrailMouseX;
+
+        double deltaY =
+                mouseY - lastTrailMouseY;
+
+        double movedDistance =
+                Math.sqrt(
+                        deltaX * deltaX
+                                + deltaY * deltaY
+                );
+
+        /*
+         * 충분히 이동하지 않았다면
+         * 새로운 좌표를 기록하지 않는다.
+         */
+
+        if (movedDistance
+                < TRAIL_SAMPLE_DISTANCE) {
+
+            return;
+        }
+
+        /*
+         * 새로운 Trail 좌표 기록
+         */
+
+        trailPoints.add(
+                new PathSegment.Point(
+                        mouseX,
+                        mouseY
+                )
+        );
+
+        lastTrailMouseX = mouseX;
+        lastTrailMouseY = mouseY;
     }
 
     /*
@@ -1540,6 +1648,69 @@ public class PathScreen extends Screen {
                             + missCount,
                     this.width / 2,
                     90,
+                    0xFFFFFFFF
+            );
+        }
+
+        /*
+         * =========================
+         * 최종 결과 표시
+         * =========================
+         */
+
+        if (state == GameState.FINISHED
+                && result != null) {
+
+            String qualityText =
+                    String.format(
+                            Locale.ROOT,
+                            "Quality : %.1f",
+                            result.getQualityScore()
+                    );
+
+            String checkpointText =
+                    "Work : "
+                            + result.getCheckpointsPassed()
+                            + " / "
+                            + result.getTotalCheckpoints();
+
+            String disabledText =
+                    "Disabled : "
+                            + result.getCheckpointsDisabled();
+
+            String completedText =
+                    "Completed : "
+                            + result.isCompleted();
+
+            graphics.drawCenteredString(
+                    this.font,
+                    qualityText,
+                    this.width / 2,
+                    110,
+                    0xFFFFD700
+            );
+
+            graphics.drawCenteredString(
+                    this.font,
+                    checkpointText,
+                    this.width / 2,
+                    125,
+                    0xFFFFFFFF
+            );
+
+            graphics.drawCenteredString(
+                    this.font,
+                    disabledText,
+                    this.width / 2,
+                    140,
+                    0xFFFFFFFF
+            );
+
+            graphics.drawCenteredString(
+                    this.font,
+                    completedText,
+                    this.width / 2,
+                    155,
                     0xFFFFFFFF
             );
         }
