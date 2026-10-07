@@ -2,7 +2,8 @@ package io.github.leejihoon1592.minigames.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import io.github.leejihoon1592.minigames.MiniGames;
-import io.github.leejihoon1592.minigames.client.screen.TimingScreen;
+import io.github.leejihoon1592.minigames.game.path.PathScreen;
+import io.github.leejihoon1592.minigames.game.timing.TimingScreen;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
@@ -17,12 +18,31 @@ public final class ClientEvents {
     private ClientEvents() {
     }
 
+    /*
+     * =========================
+     * 테스트용 키
+     * =========================
+     */
+
     public static final KeyMapping OPEN_TIMING_GAME = new KeyMapping(
             "key.minigames.open_timing_game",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_Z,
             "key.categories.minigames"
     );
+
+    public static final KeyMapping OPEN_PATH_GAME = new KeyMapping(
+            "key.minigames.open_path_game",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_X,
+            "key.categories.minigames"
+    );
+
+    /*
+     * =========================
+     * 키 등록
+     * =========================
+     */
 
     @Mod.EventBusSubscriber(
             modid = MiniGames.MOD_ID,
@@ -35,10 +55,19 @@ public final class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
+        public static void registerKeyMappings(
+                RegisterKeyMappingsEvent event
+        ) {
             event.register(OPEN_TIMING_GAME);
+            event.register(OPEN_PATH_GAME);
         }
     }
+
+    /*
+     * =========================
+     * 테스트용 게임 실행
+     * =========================
+     */
 
     @Mod.EventBusSubscriber(
             modid = MiniGames.MOD_ID,
@@ -51,7 +80,9 @@ public final class ClientEvents {
         }
 
         @SubscribeEvent
-        public static void onClientTick(TickEvent.ClientTickEvent event) {
+        public static void onClientTick(
+                TickEvent.ClientTickEvent event
+        ) {
             if (event.phase != TickEvent.Phase.END) {
                 return;
             }
@@ -62,8 +93,24 @@ public final class ClientEvents {
                 return;
             }
 
+            /*
+             * Z
+             * Timing Game
+             */
             while (OPEN_TIMING_GAME.consumeClick()) {
-                minecraft.setScreen(new TimingScreen());
+                minecraft.setScreen(
+                        new TimingScreen()
+                );
+            }
+
+            /*
+             * X
+             * Path Game
+             */
+            while (OPEN_PATH_GAME.consumeClick()) {
+                minecraft.setScreen(
+                        new PathScreen()
+                );
             }
         }
     }

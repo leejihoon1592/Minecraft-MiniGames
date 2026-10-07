@@ -1,8 +1,5 @@
-package io.github.leejihoon1592.minigames.client.screen;
+package io.github.leejihoon1592.minigames.game.timing;
 
-import io.github.leejihoon1592.minigames.game.timing.TimingConfig;
-import io.github.leejihoon1592.minigames.game.timing.TimingGame;
-import io.github.leejihoon1592.minigames.game.timing.TimingResult;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
