@@ -7,6 +7,7 @@ import net.minecraft.network.chat.Component;
 import java.util.List;
 import java.util.Locale;
 import java.util.ArrayList;
+import java.util.function.Consumer;
 
 public class PathScreen extends Screen {
 
@@ -115,6 +116,17 @@ public class PathScreen extends Screen {
 
     /*
      * =========================
+     * 결과 콜백
+     * =========================
+     *
+     * 게임이 끝났을 때
+     * PathResult를 호출한 쪽으로 전달한다.
+     */
+
+    private final Consumer<PathResult> resultCallback;
+
+    /*
+     * =========================
      * 진행도
      * =========================
      */
@@ -209,9 +221,24 @@ public class PathScreen extends Screen {
     private boolean hasAccuracySample = false;
 
     public PathScreen() {
+        this(
+                result -> {
+                }
+        );
+    }
+
+    public PathScreen(
+            Consumer<PathResult> resultCallback
+    ) {
         super(
                 Component.literal("Path Game")
         );
+
+        this.resultCallback =
+                resultCallback != null
+                        ? resultCallback
+                        : result -> {
+                };
     }
 
     /*
@@ -592,6 +619,19 @@ public class PathScreen extends Screen {
             state = GameState.FINISHED;
 
             result = createResult();
+
+            /*
+             * 게임 결과를
+             * 호출한 쪽으로 전달한다.
+             *
+             * state를 먼저 FINISHED로 바꾸기 때문에
+             * 다음 render부터는 이 부분이
+             * 다시 실행되지 않는다.
+             */
+
+            resultCallback.accept(
+                    result
+            );
 
             return;
         }
