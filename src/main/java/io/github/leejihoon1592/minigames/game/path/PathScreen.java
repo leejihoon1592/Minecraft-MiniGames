@@ -322,6 +322,12 @@ public class PathScreen extends Screen {
         drawCheckpoints(graphics);
         drawStartAndEnd(graphics);
 
+        /*
+         * 플레이어가 실제로 지나간 Trail
+         */
+
+        drawTrail(graphics);
+
         if (state == GameState.MISS_PAUSED) {
             drawRestartPoint(graphics);
         }
@@ -764,8 +770,8 @@ public class PathScreen extends Screen {
         }
 
         /*
-         * 마지막 기록 위치에서
-         * 얼마나 이동했는지 계산한다.
+         * 마지막 Trail 좌표에서
+         * 현재 마우스 위치까지의 거리 계산
          */
 
         double deltaX =
@@ -781,8 +787,8 @@ public class PathScreen extends Screen {
                 );
 
         /*
-         * 충분히 이동하지 않았다면
-         * 새로운 좌표를 기록하지 않는다.
+         * 3px 미만이라면
+         * 아직 새로운 좌표를 만들지 않는다.
          */
 
         if (movedDistance
@@ -792,19 +798,69 @@ public class PathScreen extends Screen {
         }
 
         /*
-         * 현재 Trail 구간에
-         * 새로운 좌표 기록
+         * 이동 방향의 단위 벡터
          */
 
-        currentTrail.add(
-                new PathSegment.Point(
-                        mouseX,
-                        mouseY
-                )
-        );
+        double directionX =
+                deltaX / movedDistance;
 
-        lastTrailMouseX = mouseX;
-        lastTrailMouseY = mouseY;
+        double directionY =
+                deltaY / movedDistance;
+
+        /*
+         * 마지막 Trail 좌표에서 현재 마우스 위치까지
+         * TRAIL_SAMPLE_DISTANCE 간격으로
+         * 중간 좌표를 생성한다.
+         *
+         * 마우스가 한 프레임에 멀리 이동하더라도
+         * Trail이 중간에서 끊기지 않게 한다.
+         */
+
+        double distanceToAdd =
+                TRAIL_SAMPLE_DISTANCE;
+
+        while (distanceToAdd
+                <= movedDistance) {
+
+            double pointX =
+                    lastTrailMouseX
+                            + directionX
+                            * distanceToAdd;
+
+            double pointY =
+                    lastTrailMouseY
+                            + directionY
+                            * distanceToAdd;
+
+            currentTrail.add(
+                    new PathSegment.Point(
+                            pointX,
+                            pointY
+                    )
+            );
+
+            distanceToAdd +=
+                    TRAIL_SAMPLE_DISTANCE;
+        }
+
+        /*
+         * 마지막으로 실제 추가된 Trail 좌표를
+         * 다음 보간의 기준점으로 사용한다.
+         *
+         * 현재 마우스 좌표를 그대로 기준으로 삼으면
+         * 3px보다 작은 나머지 이동거리가 매번 버려진다.
+         */
+
+        PathSegment.Point lastPoint =
+                currentTrail.get(
+                        currentTrail.size() - 1
+                );
+
+        lastTrailMouseX =
+                lastPoint.x();
+
+        lastTrailMouseY =
+                lastPoint.y();
     }
 
     /*
