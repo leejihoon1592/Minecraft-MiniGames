@@ -2,6 +2,8 @@ package io.github.leejihoon1592.minigames.client.screen;
 
 import io.github.leejihoon1592.minigames.game.timing.TimingConfig;
 import io.github.leejihoon1592.minigames.game.timing.TimingGame;
+import io.github.leejihoon1592.minigames.game.timing.TimingResult;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -15,11 +17,15 @@ public class TimingScreen extends Screen {
     private static final int POINTER_WIDTH = 4;
     private static final int POINTER_HEIGHT = 32;
 
+    private static final double COUNTDOWN_SECONDS = 3.0;
+
     private final TimingConfig config;
+    private final TimingGame game;
 
-    private long startTime;
+    private GameState state;
 
-    private TimingGame game;
+    private long countdownStartTime;
+    private long gameStartTime;
 
     public TimingScreen() {
         this(TimingConfig.defaultConfig());
@@ -35,15 +41,31 @@ public class TimingScreen extends Screen {
         }
 
         this.config = config;
+        this.game = new TimingGame(config);
+
+        this.state = GameState.READY;
     }
+
+    /*
+     * =========================
+     * Screen 초기화
+     *
+     * 해상도 변경이나 전체화면 전환으로
+     * init()이 다시 호출되어도
+     * 게임 상태는 초기화하지 않는다.
+     * =========================
+     */
 
     @Override
     protected void init() {
         super.init();
-
-        this.startTime = System.nanoTime();
-        this.game = new TimingGame(config);
     }
+
+    /*
+     * =========================
+     * 화면 렌더링
+     * =========================
+     */
 
     @Override
     public void render(
@@ -52,13 +74,21 @@ public class TimingScreen extends Screen {
             int mouseY,
             float partialTick
     ) {
+        updateState();
+
         this.renderBackground(graphics);
 
-        int centerX = this.width / 2;
-        int centerY = this.height / 2;
+        int centerX =
+                this.width / 2;
+
+        int centerY =
+                this.height / 2;
 
         int barWidth =
-                Math.min(BAR_WIDTH, this.width - 40);
+                Math.min(
+                        BAR_WIDTH,
+                        Math.max(100, this.width - 40)
+                );
 
         int barX =
                 centerX - barWidth / 2;
@@ -68,7 +98,7 @@ public class TimingScreen extends Screen {
 
         /*
          * =========================
-         * 제목 / 라운드
+         * 제목
          * =========================
          */
 
@@ -76,32 +106,64 @@ public class TimingScreen extends Screen {
                 this.font,
                 "Timing Game",
                 centerX,
-                barY - 55,
+                barY - 70,
                 0xFFFFFFFF
         );
 
-        if (!game.isFinished()) {
+        /*
+         * =========================
+         * 상태별 상단 표시
+         * =========================
+         */
 
-            graphics.drawCenteredString(
-                    this.font,
-                    "Round "
-                            + (game.getCurrentRound() + 1)
-                            + " / "
-                            + game.getMaxRounds(),
-                    centerX,
-                    barY - 38,
-                    0xFFFFFFFF
-            );
+        switch (state) {
 
-        } else {
+            case READY ->
 
-            graphics.drawCenteredString(
-                    this.font,
-                    "FINISHED",
-                    centerX,
-                    barY - 38,
-                    0xFFFFD700
-            );
+                    graphics.drawCenteredString(
+                            this.font,
+                            "CLICK TO START",
+                            centerX,
+                            barY - 48,
+                            0xFFFFFFFF
+                    );
+
+            case COUNTDOWN -> {
+
+                int countdownNumber =
+                        getCountdownNumber();
+
+                graphics.drawCenteredString(
+                        this.font,
+                        Integer.toString(countdownNumber),
+                        centerX,
+                        barY - 48,
+                        0xFFFFD700
+                );
+            }
+
+            case PLAYING ->
+
+                    graphics.drawCenteredString(
+                            this.font,
+                            "Round "
+                                    + (game.getCurrentRound() + 1)
+                                    + " / "
+                                    + game.getMaxRounds(),
+                            centerX,
+                            barY - 48,
+                            0xFFFFFFFF
+                    );
+
+            case FINISHED ->
+
+                    graphics.drawCenteredString(
+                            this.font,
+                            "FINISHED",
+                            centerX,
+                            barY - 48,
+                            0xFFFFD700
+                    );
         }
 
         /*
@@ -121,9 +183,6 @@ public class TimingScreen extends Screen {
         /*
          * =========================
          * 판정 영역
-         *
-         * Config의 정규화된 범위를
-         * 실제 화면 픽셀 크기로 변환한다.
          * =========================
          */
 
@@ -187,10 +246,12 @@ public class TimingScreen extends Screen {
         /*
          * =========================
          * 포인터
+         *
+         * PLAYING 상태에서만 표시
          * =========================
          */
 
-        if (!game.isFinished()) {
+        if (state == GameState.PLAYING) {
 
             int pointerCenterX =
                     calculatePointerX(
@@ -216,58 +277,69 @@ public class TimingScreen extends Screen {
 
         /*
          * =========================
-         * 마지막 판정
+         * 진행 중 화면
          * =========================
          */
 
-        TimingGame.Judgement lastJudgement =
-                game.getLastJudgement();
+        if (state == GameState.PLAYING) {
 
-        if (lastJudgement != null) {
+            TimingGame.Judgement lastJudgement =
+                    game.getLastJudgement();
 
-            graphics.drawCenteredString(
-                    this.font,
-                    lastJudgement.getDisplayName(),
-                    centerX,
-                    barY + 40,
-                    lastJudgement.getColor()
-            );
-        }
+            if (lastJudgement != null) {
 
-        /*
-         * =========================
-         * 진행 중 점수
-         * =========================
-         */
-
-        if (!game.isFinished()) {
+                graphics.drawCenteredString(
+                        this.font,
+                        lastJudgement.getDisplayName(),
+                        centerX,
+                        barY + 38,
+                        lastJudgement.getColor()
+                );
+            }
 
             graphics.drawCenteredString(
                     this.font,
                     "Total: "
                             + game.getTotalScore(),
                     centerX,
-                    barY + 58,
+                    barY + 56,
                     0xFFFFFFFF
             );
         }
 
         /*
          * =========================
-         * 최종 결과
+         * 최종 결과 화면
          * =========================
          */
 
-        if (game.isFinished()) {
+        if (state == GameState.FINISHED) {
+
+            TimingResult result =
+                    game.getResult();
+
+            TimingGame.Judgement lastJudgement =
+                    game.getLastJudgement();
+
+            if (lastJudgement != null) {
+
+                graphics.drawCenteredString(
+                        this.font,
+                        lastJudgement.getDisplayName(),
+                        centerX,
+                        barY + 35,
+                        lastJudgement.getColor()
+                );
+            }
 
             graphics.drawCenteredString(
                     this.font,
                     "Total Score: "
-                            + game.getTotalScore()
+                            + result.getTotalScore()
                             + " / "
-                            + game.getMaximumScore(),
+                            + result.getMaximumScore(),
                     centerX,
-                    barY + 58,
+                    barY + 53,
                     0xFFFFFFFF
             );
 
@@ -276,11 +348,47 @@ public class TimingScreen extends Screen {
                     "Average: "
                             + String.format(
                             "%.1f",
-                            game.getAverageScore()
+                            result.getAverageScore()
+                    )
+                            + "    Score: "
+                            + String.format(
+                            "%.1f%%",
+                            result.getScorePercent()
                     ),
                     centerX,
-                    barY + 75,
+                    barY + 69,
                     0xFFFFFFFF
+            );
+
+            /*
+             * 판정 횟수는 세로로 쌓지 않고
+             * 한 줄에 표시한다.
+             */
+
+            String judgementSummary =
+                    "Fantastic: "
+                            + result.getFantasticCount()
+                            + "    Perfect: "
+                            + result.getPerfectCount()
+                            + "    Good: "
+                            + result.getGoodCount()
+                            + "    Miss: "
+                            + result.getMissCount();
+
+            graphics.drawCenteredString(
+                    this.font,
+                    judgementSummary,
+                    centerX,
+                    barY + 88,
+                    0xFFFFFFFF
+            );
+
+            graphics.drawCenteredString(
+                    this.font,
+                    "Click to Close",
+                    centerX,
+                    barY + 108,
+                    0xFFAAAAAA
             );
         }
 
@@ -294,7 +402,7 @@ public class TimingScreen extends Screen {
 
     /*
      * =========================
-     * 좌클릭
+     * 클릭 처리
      * =========================
      */
 
@@ -305,24 +413,140 @@ public class TimingScreen extends Screen {
             int button
     ) {
 
-        if (button == 0
-                && !game.isFinished()) {
+        if (button != 0) {
 
-            submitTiming();
-
-            return true;
+            return super.mouseClicked(
+                    mouseX,
+                    mouseY,
+                    button
+            );
         }
 
-        return super.mouseClicked(
-                mouseX,
-                mouseY,
-                button
+        switch (state) {
+
+            /*
+             * 첫 클릭
+             * → 카운트다운 시작
+             */
+
+            case READY -> {
+
+                startCountdown();
+
+                return true;
+            }
+
+            /*
+             * 카운트다운 중에는
+             * 클릭 무시
+             */
+
+            case COUNTDOWN -> {
+
+                return true;
+            }
+
+            /*
+             * 게임 진행 중
+             * → 타이밍 판정
+             */
+
+            case PLAYING -> {
+
+                submitTiming();
+
+                if (game.isFinished()) {
+                    state = GameState.FINISHED;
+                }
+
+                return true;
+            }
+
+            /*
+             * 게임 종료 후 클릭
+             * → 화면 닫기
+             */
+
+            case FINISHED -> {
+
+                Minecraft.getInstance()
+                        .setScreen(null);
+
+                return true;
+            }
+        }
+
+        return true;
+    }
+
+    /*
+     * =========================
+     * 카운트다운 시작
+     * =========================
+     */
+
+    private void startCountdown() {
+
+        this.countdownStartTime =
+                System.nanoTime();
+
+        this.state =
+                GameState.COUNTDOWN;
+    }
+
+    /*
+     * =========================
+     * 상태 갱신
+     * =========================
+     */
+
+    private void updateState() {
+
+        if (state != GameState.COUNTDOWN) {
+            return;
+        }
+
+        double elapsedSeconds =
+                (System.nanoTime()
+                        - countdownStartTime)
+                        / 1_000_000_000.0;
+
+        if (elapsedSeconds >= COUNTDOWN_SECONDS) {
+
+            this.gameStartTime =
+                    System.nanoTime();
+
+            this.state =
+                    GameState.PLAYING;
+        }
+    }
+
+    /*
+     * =========================
+     * 카운트다운 숫자
+     * =========================
+     */
+
+    private int getCountdownNumber() {
+
+        double elapsedSeconds =
+                (System.nanoTime()
+                        - countdownStartTime)
+                        / 1_000_000_000.0;
+
+        int number =
+                3 - (int) elapsedSeconds;
+
+        return Mth.clamp(
+                number,
+                1,
+                3
         );
     }
 
     /*
      * =========================
-     * 클릭 판정 전달
+     * 클릭 → TimingGame
      * =========================
      */
 
@@ -334,7 +558,7 @@ public class TimingScreen extends Screen {
         int barWidth =
                 Math.min(
                         BAR_WIDTH,
-                        this.width - 40
+                        Math.max(100, this.width - 40)
                 );
 
         int barX =
@@ -349,11 +573,6 @@ public class TimingScreen extends Screen {
         double halfBarWidth =
                 barWidth / 2.0;
 
-        /*
-         * 중앙 = 0.0
-         * 바 끝 = 1.0
-         */
-
         double distanceFromCenter =
                 Math.abs(
                         pointerCenterX - centerX
@@ -366,7 +585,7 @@ public class TimingScreen extends Screen {
 
     /*
      * =========================
-     * 포인터 위치 계산
+     * 포인터 위치
      * =========================
      */
 
@@ -377,7 +596,7 @@ public class TimingScreen extends Screen {
 
         double elapsedSeconds =
                 (System.nanoTime()
-                        - this.startTime)
+                        - gameStartTime)
                         / 1_000_000_000.0;
 
         double cycle =
@@ -411,6 +630,19 @@ public class TimingScreen extends Screen {
                 + (int) Math.round(
                 progress * barWidth
         );
+    }
+
+    /*
+     * =========================
+     * 게임 상태
+     * =========================
+     */
+
+    private enum GameState {
+        READY,
+        COUNTDOWN,
+        PLAYING,
+        FINISHED
     }
 
     @Override
