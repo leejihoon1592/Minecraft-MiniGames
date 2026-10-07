@@ -469,13 +469,17 @@ public class PathScreen extends Screen {
 
         if (insidePath) {
 
-            updateProgress(closest);
+            boolean progressed =
+                    updateProgress(closest);
 
-            updateAccuracySampling(
-                    mouseX,
-                    mouseY,
-                    currentAccuracy
-            );
+            if (progressed) {
+
+                updateAccuracySampling(
+                        mouseX,
+                        mouseY,
+                        currentAccuracy
+                );
+            }
         }
 
         /*
@@ -671,7 +675,7 @@ public class PathScreen extends Screen {
      * =========================
      */
 
-    private void updateProgress(
+    private boolean updateProgress(
             Path.ClosestPathPoint closest
     ) {
 
@@ -679,12 +683,13 @@ public class PathScreen extends Screen {
                 closest.pathProgress();
 
         /*
-         * 뒤로 움직인 경우에는
-         * 진행도를 감소시키지 않는다.
+         * 뒤로 움직이거나
+         * 이미 지나간 구간이면
+         * 새로운 진행이 아니다.
          */
 
         if (candidateProgress <= progress) {
-            return;
+            return false;
         }
 
         double currentDistance =
@@ -706,7 +711,7 @@ public class PathScreen extends Screen {
         if (forwardJump
                 > MAX_PROGRESS_JUMP_PIXELS) {
 
-            return;
+            return false;
         }
 
         /*
@@ -740,6 +745,13 @@ public class PathScreen extends Screen {
                 checkpoint.pass();
             }
         }
+
+        /*
+         * 실제로 새로운 최고 진행도를
+         * 획득했음을 알린다.
+         */
+
+        return true;
     }
 
     /*
