@@ -4,19 +4,66 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
+import java.util.List;
+import java.util.Locale;
+
 public class PathScreen extends Screen {
 
     /*
      * =========================
-     * 테스트 경로 설정
+     * 화면 설정
      * =========================
      */
 
     private static final int PATH_THICKNESS = 30;
+    private static final int CENTER_LINE_THICKNESS = 2;
 
     private static final int PATH_COLOR = 0xFFAAAAAA;
+    private static final int CENTER_LINE_COLOR = 0xFFFF3333;
+
     private static final int START_COLOR = 0xFFFF5555;
     private static final int END_COLOR = 0xFFFF5555;
+
+    /*
+     * =========================
+     * MISS 재시작점
+     * =========================
+     */
+
+    private static final int RESTART_POINT_COLOR = 0xFF55FF55;
+    private static final int RESTART_POINT_RADIUS = 5;
+
+    private static final double RESTART_CLICK_RADIUS = 10.0;
+
+    /*
+     * =========================
+     * 진행도 설정
+     * =========================
+     */
+
+    private static final double MAX_PROGRESS_JUMP_PIXELS = 40.0;
+
+    /*
+     * =========================
+     * 정확도 설정
+     * =========================
+     *
+     * 마우스가 이 거리 이상 움직였을 때
+     * 새로운 정확도 샘플을 기록한다.
+     *
+     * 렌더링 FPS가 아니라
+     * 실제 마우스 이동거리를 기준으로 한다.
+     */
+
+    private static final double ACCURACY_SAMPLE_DISTANCE = 3.0;
+
+    /*
+     * =========================
+     * Path
+     * =========================
+     */
+
+    private Path path;
 
     /*
      * =========================
@@ -27,11 +74,139 @@ public class PathScreen extends Screen {
     private GameState state = GameState.READY;
 
     private boolean currentlyInsidePath = false;
-    private int pathExitCount = 0;
+
+    private int missCount = 0;
+
+    /*
+     * =========================
+     * 진행도
+     * =========================
+     */
+
+    private double progress = 0.0;
+    private double restartProgress = 0.0;
+
+    /*
+     * =========================
+     * 정확도
+     * =========================
+     */
+
+    /*
+     * 현재 마우스 위치의 순간 정확도
+     *
+     * 0.0 ~ 1.0
+     */
+
+    private double currentAccuracy = 1.0;
+
+    /*
+     * 지금까지 기록된 정확도 합계
+     */
+
+    private double accuracyTotal = 0.0;
+
+    /*
+     * 정확도 샘플 개수
+     */
+
+    private int accuracySampleCount = 0;
+
+    /*
+     * 마지막 정확도 샘플을 기록한
+     * 마우스 좌표
+     */
+
+    private double lastSampleMouseX = 0.0;
+    private double lastSampleMouseY = 0.0;
+
+    /*
+     * 첫 샘플이 존재하는지 여부
+     */
+
+    private boolean hasAccuracySample = false;
 
     public PathScreen() {
         super(
                 Component.literal("Path Game")
+        );
+    }
+
+    /*
+     * =========================
+     * 화면 초기화
+     * =========================
+     */
+
+    @Override
+    protected void init() {
+        super.init();
+
+        this.path = createTestPath();
+    }
+
+    /*
+     * =========================
+     * 테스트 Path 생성
+     * =========================
+     */
+
+    private Path createTestPath() {
+
+        double centerX = this.width / 2.0;
+        double centerY = this.height / 2.0;
+
+        double startX = centerX - 180.0;
+        double startY = centerY - 60.0;
+
+        PathSegment segment1 =
+                new PathSegment(
+                        startX,
+                        startY,
+                        startX + 140.0,
+                        startY
+                );
+
+        PathSegment segment2 =
+                new PathSegment(
+                        startX + 140.0,
+                        startY,
+                        startX + 140.0,
+                        startY + 70.0
+                );
+
+        PathSegment segment3 =
+                new PathSegment(
+                        startX + 140.0,
+                        startY + 70.0,
+                        startX + 70.0,
+                        startY + 70.0
+                );
+
+        PathSegment segment4 =
+                new PathSegment(
+                        startX + 70.0,
+                        startY + 70.0,
+                        startX + 70.0,
+                        startY + 140.0
+                );
+
+        PathSegment segment5 =
+                new PathSegment(
+                        startX + 70.0,
+                        startY + 140.0,
+                        startX + 360.0,
+                        startY + 140.0
+                );
+
+        return new Path(
+                List.of(
+                        segment1,
+                        segment2,
+                        segment3,
+                        segment4,
+                        segment5
+                )
         );
     }
 
@@ -50,62 +225,69 @@ public class PathScreen extends Screen {
     ) {
         this.renderBackground(graphics);
 
-        int centerX = this.width / 2;
-        int centerY = this.height / 2;
+        if (path == null) {
+            super.render(
+                    graphics,
+                    mouseX,
+                    mouseY,
+                    partialTick
+            );
+            return;
+        }
+
+        drawPathArea(graphics);
+        drawCenterLine(graphics);
+        drawStartAndEnd(graphics);
+
+        if (state == GameState.MISS_PAUSED) {
+            drawRestartPoint(graphics);
+        }
+
+        Path.ClosestPathPoint closest =
+                path.findClosestPoint(
+                        mouseX,
+                        mouseY
+                );
+
+        boolean insidePath =
+                closest.distance()
+                        <= PATH_THICKNESS / 2.0;
+
+        boolean insideStart =
+                isInsideStart(
+                        mouseX,
+                        mouseY
+                );
+
+        boolean insideEnd =
+                isInsideEnd(
+                        mouseX,
+                        mouseY
+                );
 
         /*
-         * 경로
+         * 현재 위치의 순간 정확도 계산
          */
 
-        drawTestPath(
-                graphics,
-                centerX,
-                centerY
-        );
-
-        /*
-         * 현재 마우스 위치 판정
-         */
-
-        boolean insidePath = isInsidePath(
-                mouseX,
-                mouseY,
-                centerX,
-                centerY
-        );
-
-        boolean insideStart = isInsideStart(
-                mouseX,
-                mouseY,
-                centerX,
-                centerY
-        );
-
-        boolean insideEnd = isInsideEnd(
-                mouseX,
-                mouseY,
-                centerX,
-                centerY
-        );
-
-        /*
-         * 게임 상태 갱신
-         */
+        currentAccuracy =
+                calculateAccuracy(
+                        closest.distance()
+                );
 
         updateGameState(
                 insidePath,
-                insideStart,
-                insideEnd
+                insideEnd,
+                closest,
+                mouseX,
+                mouseY
         );
-
-        /*
-         * 상태 표시
-         */
 
         drawStatus(
                 graphics,
-                centerX,
-                insidePath
+                insidePath,
+                insideStart,
+                mouseX,
+                mouseY
         );
 
         super.render(
@@ -118,314 +300,607 @@ public class PathScreen extends Screen {
 
     /*
      * =========================
+     * 마우스 클릭
+     * =========================
+     */
+
+    @Override
+    public boolean mouseClicked(
+            double mouseX,
+            double mouseY,
+            int button
+    ) {
+
+        if (button != 0) {
+            return super.mouseClicked(
+                    mouseX,
+                    mouseY,
+                    button
+            );
+        }
+
+        /*
+         * START 클릭
+         */
+
+        if (state == GameState.READY
+                && path != null
+                && isInsideStart(
+                mouseX,
+                mouseY
+        )) {
+
+            state = GameState.PLAYING;
+
+            currentlyInsidePath = true;
+
+            missCount = 0;
+
+            progress = 0.0;
+            restartProgress = 0.0;
+
+            /*
+             * 정확도 초기화
+             */
+
+            currentAccuracy = 1.0;
+
+            accuracyTotal = 0.0;
+            accuracySampleCount = 0;
+
+            lastSampleMouseX = mouseX;
+            lastSampleMouseY = mouseY;
+
+            hasAccuracySample = true;
+
+            /*
+             * START 자체를 첫 정확도 샘플로 기록
+             */
+
+            addAccuracySample(1.0);
+
+            return true;
+        }
+
+        /*
+         * MISS 후 재시작
+         */
+
+        if (state == GameState.MISS_PAUSED
+                && path != null
+                && isInsideRestartPoint(
+                mouseX,
+                mouseY
+        )) {
+
+            state = GameState.PLAYING;
+
+            currentlyInsidePath = true;
+
+            progress = restartProgress;
+
+            /*
+             * 초록점은 정확도 100%의
+             * 중앙선 위에 있으므로
+             * 새로운 샘플 기준점을 여기로 잡는다.
+             */
+
+            lastSampleMouseX = mouseX;
+            lastSampleMouseY = mouseY;
+
+            hasAccuracySample = true;
+
+            currentAccuracy = 1.0;
+
+            return true;
+        }
+
+        return super.mouseClicked(
+                mouseX,
+                mouseY,
+                button
+        );
+    }
+
+    /*
+     * =========================
      * 게임 상태 갱신
      * =========================
      */
 
     private void updateGameState(
             boolean insidePath,
-            boolean insideStart,
-            boolean insideEnd
+            boolean insideEnd,
+            Path.ClosestPathPoint closest,
+            double mouseX,
+            double mouseY
     ) {
 
+        if (state == GameState.READY) {
+            return;
+        }
+
+        if (state == GameState.MISS_PAUSED) {
+            return;
+        }
+
+        if (state == GameState.FINISHED) {
+            return;
+        }
+
         /*
-         * READY
-         *
-         * START 영역에 마우스를 올리면 시작
+         * 여기부터 PLAYING
          */
 
-        if (state == GameState.READY) {
+        if (insidePath) {
 
-            if (insideStart) {
-                state = GameState.PLAYING;
-                currentlyInsidePath = true;
-            }
+            updateProgress(closest);
+
+            updateAccuracySampling(
+                    mouseX,
+                    mouseY,
+                    currentAccuracy
+            );
+        }
+
+        /*
+         * 정상 완료
+         */
+
+        if (insideEnd
+                && progress >= 0.99) {
+
+            progress = 1.0;
+
+            state = GameState.FINISHED;
 
             return;
         }
 
         /*
-         * PLAYING
+         * Path 이탈
          */
 
-        if (state == GameState.PLAYING) {
+        if (currentlyInsidePath
+                && !insidePath) {
 
-            /*
-             * END에 도착하면 완료
-             */
+            triggerMiss();
 
-            if (insideEnd) {
-                state = GameState.FINISHED;
-                return;
+            return;
+        }
+
+        currentlyInsidePath =
+                insidePath;
+    }
+
+    /*
+     * =========================
+     * 정확도 계산
+     * =========================
+     */
+
+    private double calculateAccuracy(
+            double distanceFromCenter
+    ) {
+
+        double maximumDistance =
+                PATH_THICKNESS / 2.0;
+
+        /*
+         * 중앙선
+         */
+
+        if (distanceFromCenter <= 0.0) {
+            return 1.0;
+        }
+
+        /*
+         * 회색 Path 밖
+         */
+
+        if (distanceFromCenter
+                >= maximumDistance) {
+
+            return 0.0;
+        }
+
+        /*
+         * 현재는 가장 단순한 선형 계산
+         *
+         * 중앙 = 100%
+         * 가장자리 = 0%
+         */
+
+        double accuracy =
+                1.0
+                        - (
+                        distanceFromCenter
+                                / maximumDistance
+                );
+
+        return Math.max(
+                0.0,
+                Math.min(
+                        1.0,
+                        accuracy
+                )
+        );
+    }
+
+    /*
+     * =========================
+     * 정확도 샘플링
+     * =========================
+     */
+
+    private void updateAccuracySampling(
+            double mouseX,
+            double mouseY,
+            double accuracy
+    ) {
+
+        if (!hasAccuracySample) {
+
+            lastSampleMouseX = mouseX;
+            lastSampleMouseY = mouseY;
+
+            hasAccuracySample = true;
+
+            addAccuracySample(accuracy);
+
+            return;
+        }
+
+        double movedDistance =
+                distance(
+                        mouseX,
+                        mouseY,
+                        lastSampleMouseX,
+                        lastSampleMouseY
+                );
+
+        /*
+         * 3px 이상 움직였을 때만
+         * 새로운 샘플 기록
+         */
+
+        if (movedDistance
+                < ACCURACY_SAMPLE_DISTANCE) {
+
+            return;
+        }
+
+        addAccuracySample(accuracy);
+
+        lastSampleMouseX = mouseX;
+        lastSampleMouseY = mouseY;
+    }
+
+    /*
+     * =========================
+     * 정확도 샘플 추가
+     * =========================
+     */
+
+    private void addAccuracySample(
+            double accuracy
+    ) {
+
+        accuracyTotal += accuracy;
+        accuracySampleCount++;
+    }
+
+    /*
+     * =========================
+     * 누적 정확도
+     * =========================
+     */
+
+    private double getAverageAccuracy() {
+
+        if (accuracySampleCount <= 0) {
+            return 1.0;
+        }
+
+        return accuracyTotal
+                / accuracySampleCount;
+    }
+
+    /*
+     * =========================
+     * MISS
+     * =========================
+     */
+
+    private void triggerMiss() {
+
+        restartProgress = progress;
+
+        missCount++;
+
+        state = GameState.MISS_PAUSED;
+
+        currentlyInsidePath = false;
+
+        /*
+         * MISS 상태에서는
+         * 정확도 샘플링도 중단된다.
+         */
+
+        hasAccuracySample = false;
+    }
+
+    /*
+     * =========================
+     * 진행도
+     * =========================
+     */
+
+    private void updateProgress(
+            Path.ClosestPathPoint closest
+    ) {
+
+        double candidateProgress =
+                closest.pathProgress();
+
+        if (candidateProgress <= progress) {
+            return;
+        }
+
+        double currentDistance =
+                progress
+                        * path.getTotalLength();
+
+        double candidateDistance =
+                closest.distanceAlongPath();
+
+        double forwardJump =
+                candidateDistance
+                        - currentDistance;
+
+        if (forwardJump
+                > MAX_PROGRESS_JUMP_PIXELS) {
+
+            return;
+        }
+
+        progress =
+                candidateProgress;
+    }
+
+    /*
+     * =========================
+     * 회색 Path
+     * =========================
+     */
+
+    private void drawPathArea(
+            GuiGraphics graphics
+    ) {
+
+        int halfThickness =
+                PATH_THICKNESS / 2;
+
+        for (PathSegment segment :
+                path.getSegments()) {
+
+            int startX =
+                    (int) Math.round(
+                            Math.min(
+                                    segment.getStartX(),
+                                    segment.getEndX()
+                            )
+                    );
+
+            int startY =
+                    (int) Math.round(
+                            Math.min(
+                                    segment.getStartY(),
+                                    segment.getEndY()
+                            )
+                    );
+
+            int endX =
+                    (int) Math.round(
+                            Math.max(
+                                    segment.getStartX(),
+                                    segment.getEndX()
+                            )
+                    );
+
+            int endY =
+                    (int) Math.round(
+                            Math.max(
+                                    segment.getStartY(),
+                                    segment.getEndY()
+                            )
+                    );
+
+            if (segment.getStartY()
+                    == segment.getEndY()) {
+
+                graphics.fill(
+                        startX - halfThickness,
+                        startY - halfThickness,
+                        endX + halfThickness,
+                        startY + halfThickness,
+                        PATH_COLOR
+                );
+
+            } else if (segment.getStartX()
+                    == segment.getEndX()) {
+
+                graphics.fill(
+                        startX - halfThickness,
+                        startY - halfThickness,
+                        startX + halfThickness,
+                        endY + halfThickness,
+                        PATH_COLOR
+                );
             }
-
-            /*
-             * 경로 이탈 감지
-             *
-             * 계속 밖에 있는 동안 숫자가 증가하는 것이 아니라,
-             * 안 → 밖으로 넘어가는 순간에만 1회 증가
-             */
-
-            if (currentlyInsidePath && !insidePath) {
-                pathExitCount++;
-            }
-
-            currentlyInsidePath = insidePath;
         }
     }
 
     /*
      * =========================
-     * 상태 표시
+     * 빨간 중앙선
      * =========================
      */
 
-    private void drawStatus(
-            GuiGraphics graphics,
-            int centerX,
-            boolean insidePath
+    private void drawCenterLine(
+            GuiGraphics graphics
     ) {
 
-        String mainText;
-        int mainColor;
+        int halfLine =
+                CENTER_LINE_THICKNESS / 2;
 
-        switch (state) {
+        for (PathSegment segment :
+                path.getSegments()) {
 
-            case READY -> {
-                mainText = "MOVE TO START";
-                mainColor = 0xFFFFFFFF;
+            int startX =
+                    (int) Math.round(
+                            segment.getStartX()
+                    );
+
+            int startY =
+                    (int) Math.round(
+                            segment.getStartY()
+                    );
+
+            int endX =
+                    (int) Math.round(
+                            segment.getEndX()
+                    );
+
+            int endY =
+                    (int) Math.round(
+                            segment.getEndY()
+                    );
+
+            if (startY == endY) {
+
+                int left =
+                        Math.min(
+                                startX,
+                                endX
+                        );
+
+                int right =
+                        Math.max(
+                                startX,
+                                endX
+                        );
+
+                graphics.fill(
+                        left,
+                        startY - halfLine,
+                        right,
+                        startY - halfLine
+                                + CENTER_LINE_THICKNESS,
+                        CENTER_LINE_COLOR
+                );
+
+            } else if (startX == endX) {
+
+                int top =
+                        Math.min(
+                                startY,
+                                endY
+                        );
+
+                int bottom =
+                        Math.max(
+                                startY,
+                                endY
+                        );
+
+                graphics.fill(
+                        startX - halfLine,
+                        top,
+                        startX - halfLine
+                                + CENTER_LINE_THICKNESS,
+                        bottom,
+                        CENTER_LINE_COLOR
+                );
             }
-
-            case PLAYING -> {
-
-                if (insidePath) {
-                    mainText = "PATH : INSIDE";
-                    mainColor = 0xFF55FF55;
-                } else {
-                    mainText = "PATH : OUTSIDE";
-                    mainColor = 0xFFFF5555;
-                }
-            }
-
-            case FINISHED -> {
-                mainText = "FINISHED";
-                mainColor = 0xFFFFD700;
-            }
-
-            default -> {
-                mainText = "";
-                mainColor = 0xFFFFFFFF;
-            }
-        }
-
-        graphics.drawCenteredString(
-                this.font,
-                mainText,
-                centerX,
-                30,
-                mainColor
-        );
-
-        /*
-         * 플레이 중 / 완료 후
-         * 이탈 횟수 표시
-         */
-
-        if (state == GameState.PLAYING
-                || state == GameState.FINISHED) {
-
-            graphics.drawCenteredString(
-                    this.font,
-                    "Path Exits : " + pathExitCount,
-                    centerX,
-                    45,
-                    0xFFFFFFFF
-            );
         }
     }
 
     /*
      * =========================
-     * 테스트 경로 그리기
+     * START / END
      * =========================
      */
 
-    private void drawTestPath(
-            GuiGraphics graphics,
-            int centerX,
-            int centerY
+    private void drawStartAndEnd(
+            GuiGraphics graphics
     ) {
 
-        int startX = centerX - 300;
-        int startY = centerY - 50;
+        PathSegment.Point start =
+                path.getPointAtProgress(0.0);
 
-        /*
-         * 1번 구간
-         */
+        PathSegment.Point end =
+                path.getPointAtProgress(1.0);
 
-        drawHorizontalPath(
-                graphics,
-                startX,
-                startY,
-                220
-        );
+        int halfThickness =
+                PATH_THICKNESS / 2;
 
-        /*
-         * 2번 구간
-         */
+        int startX =
+                (int) Math.round(start.x());
 
-        drawVerticalPath(
-                graphics,
-                startX + 220 - PATH_THICKNESS,
-                startY,
-                100
-        );
+        int startY =
+                (int) Math.round(start.y());
 
-        /*
-         * 3번 구간
-         */
+        int endX =
+                (int) Math.round(end.x());
 
-        drawHorizontalPath(
-                graphics,
-                startX + 100,
-                startY + 100 - PATH_THICKNESS,
-                120
-        );
-
-        /*
-         * 4번 구간
-         */
-
-        drawVerticalPath(
-                graphics,
-                startX + 100,
-                startY + 100 - PATH_THICKNESS,
-                80
-        );
-
-        /*
-         * 5번 구간
-         */
-
-        drawHorizontalPath(
-                graphics,
-                startX + 100,
-                startY + 150,
-                400
-        );
-
-        /*
-         * START
-         */
+        int endY =
+                (int) Math.round(end.y());
 
         graphics.fill(
-                startX,
-                startY,
-                startX + 5,
-                startY + PATH_THICKNESS,
+                startX - 3,
+                startY - halfThickness,
+                startX + 3,
+                startY + halfThickness,
                 START_COLOR
         );
 
-        /*
-         * END
-         */
-
         graphics.fill(
-                startX + 495,
-                startY + 150,
-                startX + 500,
-                startY + 150 + PATH_THICKNESS,
+                endX - 3,
+                endY - halfThickness,
+                endX + 3,
+                endY + halfThickness,
                 END_COLOR
         );
     }
 
     /*
      * =========================
-     * 전체 경로 내부 판정
+     * 재시작점
      * =========================
      */
 
-    private boolean isInsidePath(
-            double mouseX,
-            double mouseY,
-            int centerX,
-            int centerY
+    private void drawRestartPoint(
+            GuiGraphics graphics
     ) {
 
-        int startX = centerX - 300;
-        int startY = centerY - 50;
+        PathSegment.Point point =
+                path.getPointAtProgress(
+                        restartProgress
+                );
 
-        /*
-         * 1번
-         */
+        int x =
+                (int) Math.round(point.x());
 
-        if (isInsideRectangle(
-                mouseX,
-                mouseY,
-                startX,
-                startY,
-                220,
-                PATH_THICKNESS
-        )) {
-            return true;
-        }
+        int y =
+                (int) Math.round(point.y());
 
-        /*
-         * 2번
-         */
-
-        if (isInsideRectangle(
-                mouseX,
-                mouseY,
-                startX + 220 - PATH_THICKNESS,
-                startY,
-                PATH_THICKNESS,
-                100
-        )) {
-            return true;
-        }
-
-        /*
-         * 3번
-         */
-
-        if (isInsideRectangle(
-                mouseX,
-                mouseY,
-                startX + 100,
-                startY + 100 - PATH_THICKNESS,
-                120,
-                PATH_THICKNESS
-        )) {
-            return true;
-        }
-
-        /*
-         * 4번
-         */
-
-        if (isInsideRectangle(
-                mouseX,
-                mouseY,
-                startX + 100,
-                startY + 100 - PATH_THICKNESS,
-                PATH_THICKNESS,
-                80
-        )) {
-            return true;
-        }
-
-        /*
-         * 5번
-         */
-
-        return isInsideRectangle(
-                mouseX,
-                mouseY,
-                startX + 100,
-                startY + 150,
-                400,
-                PATH_THICKNESS
+        graphics.fill(
+                x - RESTART_POINT_RADIUS,
+                y - RESTART_POINT_RADIUS,
+                x + RESTART_POINT_RADIUS + 1,
+                y + RESTART_POINT_RADIUS + 1,
+                RESTART_POINT_COLOR
         );
     }
 
@@ -437,22 +912,18 @@ public class PathScreen extends Screen {
 
     private boolean isInsideStart(
             double mouseX,
-            double mouseY,
-            int centerX,
-            int centerY
+            double mouseY
     ) {
 
-        int startX = centerX - 300;
-        int startY = centerY - 50;
+        PathSegment.Point start =
+                path.getPointAtProgress(0.0);
 
-        return isInsideRectangle(
+        return distance(
                 mouseX,
                 mouseY,
-                startX,
-                startY,
-                10,
-                PATH_THICKNESS
-        );
+                start.x(),
+                start.y()
+        ) <= PATH_THICKNESS / 2.0;
     }
 
     /*
@@ -463,98 +934,245 @@ public class PathScreen extends Screen {
 
     private boolean isInsideEnd(
             double mouseX,
-            double mouseY,
-            int centerX,
-            int centerY
+            double mouseY
     ) {
 
-        int startX = centerX - 300;
-        int startY = centerY - 50;
+        PathSegment.Point end =
+                path.getPointAtProgress(1.0);
 
-        return isInsideRectangle(
+        return distance(
                 mouseX,
                 mouseY,
-                startX + 490,
-                startY + 150,
-                10,
-                PATH_THICKNESS
-        );
+                end.x(),
+                end.y()
+        ) <= PATH_THICKNESS / 2.0;
     }
 
     /*
      * =========================
-     * 사각형 내부 판정
+     * 재시작점 판정
      * =========================
      */
 
-    private boolean isInsideRectangle(
+    private boolean isInsideRestartPoint(
             double mouseX,
-            double mouseY,
-            int x,
-            int y,
-            int width,
-            int height
+            double mouseY
     ) {
 
-        return mouseX >= x
-                && mouseX <= x + width
-                && mouseY >= y
-                && mouseY <= y + height;
+        PathSegment.Point point =
+                path.getPointAtProgress(
+                        restartProgress
+                );
+
+        return distance(
+                mouseX,
+                mouseY,
+                point.x(),
+                point.y()
+        ) <= RESTART_CLICK_RADIUS;
     }
 
     /*
      * =========================
-     * 가로 경로
+     * 상태 표시
      * =========================
      */
 
-    private void drawHorizontalPath(
+    private void drawStatus(
             GuiGraphics graphics,
-            int x,
-            int y,
-            int length
+            boolean insidePath,
+            boolean insideStart,
+            double mouseX,
+            double mouseY
     ) {
 
-        graphics.fill(
-                x,
-                y,
-                x + length,
-                y + PATH_THICKNESS,
-                PATH_COLOR
+        String mainText;
+        int mainColor;
+
+        switch (state) {
+
+            case READY -> {
+
+                if (insideStart) {
+
+                    mainText =
+                            "CLICK TO START";
+
+                    mainColor =
+                            0xFF55FF55;
+
+                } else {
+
+                    mainText =
+                            "MOVE TO START";
+
+                    mainColor =
+                            0xFFFFFFFF;
+                }
+            }
+
+            case PLAYING -> {
+
+                if (insidePath) {
+
+                    mainText =
+                            "PATH : INSIDE";
+
+                    mainColor =
+                            0xFF55FF55;
+
+                } else {
+
+                    mainText =
+                            "PATH : OUTSIDE";
+
+                    mainColor =
+                            0xFFFF5555;
+                }
+            }
+
+            case MISS_PAUSED -> {
+
+                if (isInsideRestartPoint(
+                        mouseX,
+                        mouseY
+                )) {
+
+                    mainText =
+                            "CLICK TO RESUME";
+
+                    mainColor =
+                            0xFF55FF55;
+
+                } else {
+
+                    mainText =
+                            "MISS - RETURN TO GREEN POINT";
+
+                    mainColor =
+                            0xFFFF5555;
+                }
+            }
+
+            case FINISHED -> {
+
+                mainText =
+                        "FINISHED";
+
+                mainColor =
+                        0xFFFFD700;
+            }
+
+            default -> {
+
+                mainText = "";
+
+                mainColor =
+                        0xFFFFFFFF;
+            }
+        }
+
+        graphics.drawCenteredString(
+                this.font,
+                mainText,
+                this.width / 2,
+                30,
+                mainColor
+        );
+
+        if (state != GameState.READY) {
+
+            String progressText =
+                    String.format(
+                            Locale.ROOT,
+                            "Progress : %.1f%%",
+                            progress * 100.0
+                    );
+
+            String accuracyText =
+                    String.format(
+                            Locale.ROOT,
+                            "Accuracy : %.1f%%",
+                            getAverageAccuracy()
+                                    * 100.0
+                    );
+
+            String currentAccuracyText =
+                    String.format(
+                            Locale.ROOT,
+                            "Current : %.1f%%",
+                            currentAccuracy
+                                    * 100.0
+                    );
+
+            graphics.drawCenteredString(
+                    this.font,
+                    progressText,
+                    this.width / 2,
+                    45,
+                    0xFFFFFFFF
+            );
+
+            graphics.drawCenteredString(
+                    this.font,
+                    accuracyText,
+                    this.width / 2,
+                    60,
+                    0xFFFFFFFF
+            );
+
+            graphics.drawCenteredString(
+                    this.font,
+                    currentAccuracyText,
+                    this.width / 2,
+                    75,
+                    0xFFAAAAAA
+            );
+
+            graphics.drawCenteredString(
+                    this.font,
+                    "Miss : "
+                            + missCount,
+                    this.width / 2,
+                    90,
+                    0xFFFFFFFF
+            );
+        }
+    }
+
+    /*
+     * =========================
+     * 거리 계산
+     * =========================
+     */
+
+    private double distance(
+            double x1,
+            double y1,
+            double x2,
+            double y2
+    ) {
+
+        double deltaX =
+                x1 - x2;
+
+        double deltaY =
+                y1 - y2;
+
+        return Math.sqrt(
+                deltaX * deltaX
+                        + deltaY * deltaY
         );
     }
-
-    /*
-     * =========================
-     * 세로 경로
-     * =========================
-     */
-
-    private void drawVerticalPath(
-            GuiGraphics graphics,
-            int x,
-            int y,
-            int length
-    ) {
-
-        graphics.fill(
-                x,
-                y,
-                x + PATH_THICKNESS,
-                y + length,
-                PATH_COLOR
-        );
-    }
-
-    /*
-     * =========================
-     * 게임 상태
-     * =========================
-     */
 
     private enum GameState {
+
         READY,
+
         PLAYING,
+
+        MISS_PAUSED,
+
         FINISHED
     }
 
