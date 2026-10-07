@@ -9,6 +9,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
+import java.util.Locale;
+
 public class TimingScreen extends Screen {
 
     private static final int BAR_WIDTH = 600;
@@ -32,7 +34,11 @@ public class TimingScreen extends Screen {
     }
 
     public TimingScreen(TimingConfig config) {
-        super(Component.literal("Timing Game"));
+        super(
+                Component.translatable(
+                        "screen.minigames.timing.title"
+                )
+        );
 
         if (config == null) {
             throw new IllegalArgumentException(
@@ -50,9 +56,8 @@ public class TimingScreen extends Screen {
      * =========================
      * Screen 초기화
      *
-     * 해상도 변경이나 전체화면 전환으로
-     * init()이 다시 호출되어도
-     * 게임 상태는 초기화하지 않는다.
+     * 해상도 변경 시에도
+     * 게임 상태를 초기화하지 않는다.
      * =========================
      */
 
@@ -104,7 +109,9 @@ public class TimingScreen extends Screen {
 
         graphics.drawCenteredString(
                 this.font,
-                "Timing Game",
+                Component.translatable(
+                        "screen.minigames.timing.title"
+                ),
                 centerX,
                 barY - 70,
                 0xFFFFFFFF
@@ -122,7 +129,9 @@ public class TimingScreen extends Screen {
 
                     graphics.drawCenteredString(
                             this.font,
-                            "CLICK TO START",
+                            Component.translatable(
+                                    "screen.minigames.timing.ready"
+                            ),
                             centerX,
                             barY - 48,
                             0xFFFFFFFF
@@ -146,10 +155,11 @@ public class TimingScreen extends Screen {
 
                     graphics.drawCenteredString(
                             this.font,
-                            "Round "
-                                    + (game.getCurrentRound() + 1)
-                                    + " / "
-                                    + game.getMaxRounds(),
+                            Component.translatable(
+                                    "screen.minigames.timing.round",
+                                    game.getCurrentRound() + 1,
+                                    game.getMaxRounds()
+                            ),
                             centerX,
                             barY - 48,
                             0xFFFFFFFF
@@ -159,7 +169,9 @@ public class TimingScreen extends Screen {
 
                     graphics.drawCenteredString(
                             this.font,
-                            "FINISHED",
+                            Component.translatable(
+                                    "screen.minigames.timing.finished"
+                            ),
                             centerX,
                             barY - 48,
                             0xFFFFD700
@@ -207,10 +219,6 @@ public class TimingScreen extends Screen {
                                 * halfBarWidth
                 );
 
-        /*
-         * GOOD
-         */
-
         graphics.fill(
                 centerX - goodHalfWidth,
                 barY,
@@ -219,10 +227,6 @@ public class TimingScreen extends Screen {
                 0xFF55AA55
         );
 
-        /*
-         * PERFECT
-         */
-
         graphics.fill(
                 centerX - perfectHalfWidth,
                 barY,
@@ -230,10 +234,6 @@ public class TimingScreen extends Screen {
                 barY + BAR_HEIGHT,
                 0xFFE0B040
         );
-
-        /*
-         * FANTASTIC
-         */
 
         graphics.fill(
                 centerX - fantasticHalfWidth,
@@ -246,8 +246,6 @@ public class TimingScreen extends Screen {
         /*
          * =========================
          * 포인터
-         *
-         * PLAYING 상태에서만 표시
          * =========================
          */
 
@@ -277,7 +275,7 @@ public class TimingScreen extends Screen {
 
         /*
          * =========================
-         * 진행 중 화면
+         * 진행 중
          * =========================
          */
 
@@ -288,19 +286,20 @@ public class TimingScreen extends Screen {
 
             if (lastJudgement != null) {
 
-                graphics.drawCenteredString(
-                        this.font,
-                        lastJudgement.getDisplayName(),
+                drawJudgement(
+                        graphics,
+                        lastJudgement,
                         centerX,
-                        barY + 38,
-                        lastJudgement.getColor()
+                        barY + 38
                 );
             }
 
             graphics.drawCenteredString(
                     this.font,
-                    "Total: "
-                            + game.getTotalScore(),
+                    Component.translatable(
+                            "screen.minigames.timing.total",
+                            game.getTotalScore()
+                    ),
                     centerX,
                     barY + 56,
                     0xFFFFFFFF
@@ -309,7 +308,7 @@ public class TimingScreen extends Screen {
 
         /*
          * =========================
-         * 최종 결과 화면
+         * 최종 결과
          * =========================
          */
 
@@ -323,61 +322,75 @@ public class TimingScreen extends Screen {
 
             if (lastJudgement != null) {
 
-                graphics.drawCenteredString(
-                        this.font,
-                        lastJudgement.getDisplayName(),
+                drawJudgement(
+                        graphics,
+                        lastJudgement,
                         centerX,
-                        barY + 35,
-                        lastJudgement.getColor()
+                        barY + 35
                 );
             }
 
             graphics.drawCenteredString(
                     this.font,
-                    "Total Score: "
-                            + result.getTotalScore()
-                            + " / "
-                            + result.getMaximumScore(),
+                    Component.translatable(
+                            "screen.minigames.timing.total_score",
+                            result.getTotalScore(),
+                            result.getMaximumScore()
+                    ),
                     centerX,
                     barY + 53,
                     0xFFFFFFFF
             );
 
-            graphics.drawCenteredString(
-                    this.font,
-                    "Average: "
-                            + String.format(
+            String average =
+                    String.format(
+                            Locale.ROOT,
                             "%.1f",
                             result.getAverageScore()
-                    )
-                            + "    Score: "
-                            + String.format(
-                            "%.1f%%",
+                    );
+
+            String scorePercent =
+                    String.format(
+                            Locale.ROOT,
+                            "%.1f",
                             result.getScorePercent()
-                    ),
+                    );
+
+            Component averageText =
+                    Component.translatable(
+                            "screen.minigames.timing.average",
+                            average
+                    );
+
+            Component scoreText =
+                    Component.translatable(
+                            "screen.minigames.timing.score",
+                            scorePercent
+                    );
+
+            Component averageAndScore =
+                    Component.empty()
+                            .append(averageText)
+                            .append("    ")
+                            .append(scoreText);
+
+            graphics.drawCenteredString(
+                    this.font,
+                    averageAndScore,
                     centerX,
                     barY + 69,
                     0xFFFFFFFF
             );
 
-            /*
-             * 판정 횟수는 세로로 쌓지 않고
-             * 한 줄에 표시한다.
-             */
-
-            String judgementSummary =
-                    "Fantastic: "
-                            + result.getFantasticCount()
-                            + "    Perfect: "
-                            + result.getPerfectCount()
-                            + "    Good: "
-                            + result.getGoodCount()
-                            + "    Miss: "
-                            + result.getMissCount();
-
             graphics.drawCenteredString(
                     this.font,
-                    judgementSummary,
+                    Component.translatable(
+                            "screen.minigames.timing.result_summary",
+                            result.getFantasticCount(),
+                            result.getPerfectCount(),
+                            result.getGoodCount(),
+                            result.getMissCount()
+                    ),
                     centerX,
                     barY + 88,
                     0xFFFFFFFF
@@ -385,7 +398,9 @@ public class TimingScreen extends Screen {
 
             graphics.drawCenteredString(
                     this.font,
-                    "Click to Close",
+                    Component.translatable(
+                            "screen.minigames.timing.close"
+                    ),
                     centerX,
                     barY + 108,
                     0xFFAAAAAA
@@ -398,6 +413,86 @@ public class TimingScreen extends Screen {
                 mouseY,
                 partialTick
         );
+    }
+
+    /*
+     * =========================
+     * 판정 표시
+     * =========================
+     */
+
+    private void drawJudgement(
+            GuiGraphics graphics,
+            TimingGame.Judgement judgement,
+            int centerX,
+            int y
+    ) {
+
+        graphics.drawCenteredString(
+                this.font,
+                Component.translatable(
+                        getJudgementTranslationKey(
+                                judgement
+                        )
+                ),
+                centerX,
+                y,
+                getJudgementColor(
+                        judgement
+                )
+        );
+    }
+
+    /*
+     * =========================
+     * 판정 → 번역 키
+     * =========================
+     */
+
+    private String getJudgementTranslationKey(
+            TimingGame.Judgement judgement
+    ) {
+
+        return switch (judgement) {
+
+            case FANTASTIC ->
+                    "screen.minigames.timing.fantastic";
+
+            case PERFECT ->
+                    "screen.minigames.timing.perfect";
+
+            case GOOD ->
+                    "screen.minigames.timing.good";
+
+            case MISS ->
+                    "screen.minigames.timing.miss";
+        };
+    }
+
+    /*
+     * =========================
+     * 판정 → 표시 색상
+     * =========================
+     */
+
+    private int getJudgementColor(
+            TimingGame.Judgement judgement
+    ) {
+
+        return switch (judgement) {
+
+            case FANTASTIC ->
+                    0xFF55AAFF;
+
+            case PERFECT ->
+                    0xFFE0B040;
+
+            case GOOD ->
+                    0xFF55FF55;
+
+            case MISS ->
+                    0xFFFF5555;
+        };
     }
 
     /*
@@ -424,11 +519,6 @@ public class TimingScreen extends Screen {
 
         switch (state) {
 
-            /*
-             * 첫 클릭
-             * → 카운트다운 시작
-             */
-
             case READY -> {
 
                 startCountdown();
@@ -436,20 +526,10 @@ public class TimingScreen extends Screen {
                 return true;
             }
 
-            /*
-             * 카운트다운 중에는
-             * 클릭 무시
-             */
-
             case COUNTDOWN -> {
 
                 return true;
             }
-
-            /*
-             * 게임 진행 중
-             * → 타이밍 판정
-             */
 
             case PLAYING -> {
 
@@ -461,11 +541,6 @@ public class TimingScreen extends Screen {
 
                 return true;
             }
-
-            /*
-             * 게임 종료 후 클릭
-             * → 화면 닫기
-             */
 
             case FINISHED -> {
 
@@ -481,7 +556,7 @@ public class TimingScreen extends Screen {
 
     /*
      * =========================
-     * 카운트다운 시작
+     * 카운트다운
      * =========================
      */
 
@@ -493,12 +568,6 @@ public class TimingScreen extends Screen {
         this.state =
                 GameState.COUNTDOWN;
     }
-
-    /*
-     * =========================
-     * 상태 갱신
-     * =========================
-     */
 
     private void updateState() {
 
@@ -521,12 +590,6 @@ public class TimingScreen extends Screen {
         }
     }
 
-    /*
-     * =========================
-     * 카운트다운 숫자
-     * =========================
-     */
-
     private int getCountdownNumber() {
 
         double elapsedSeconds =
@@ -546,7 +609,7 @@ public class TimingScreen extends Screen {
 
     /*
      * =========================
-     * 클릭 → TimingGame
+     * 타이밍 판정
      * =========================
      */
 

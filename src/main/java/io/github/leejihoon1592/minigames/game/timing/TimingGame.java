@@ -74,10 +74,6 @@ public class TimingGame {
         this.totalScore +=
                 getScore(judgement);
 
-        /*
-         * 판정별 횟수 기록
-         */
-
         switch (judgement) {
 
             case FANTASTIC ->
@@ -124,7 +120,7 @@ public class TimingGame {
 
     /*
      * =========================
-     * 최종 결과 생성
+     * 결과 생성
      * =========================
      */
 
@@ -188,48 +184,16 @@ public class TimingGame {
     /*
      * =========================
      * 판정 종류
+     *
+     * 게임 로직은 판정의 의미만 가진다.
+     * 표시 문자열과 색상은 Client가 담당한다.
      * =========================
      */
 
     public enum Judgement {
-
-        FANTASTIC(
-                "FANTASTIC!",
-                0xFF55AAFF
-        ),
-
-        PERFECT(
-                "PERFECT!",
-                0xFFE0B040
-        ),
-
-        GOOD(
-                "GOOD!",
-                0xFF55FF55
-        ),
-
-        MISS(
-                "MISS!",
-                0xFFFF5555
-        );
-
-        private final String displayName;
-        private final int color;
-
-        Judgement(
-                String displayName,
-                int color
-        ) {
-            this.displayName = displayName;
-            this.color = color;
-        }
-
-        public String getDisplayName() {
-            return displayName;
-        }
-
-        public int getColor() {
-            return color;
-        }
+        FANTASTIC,
+        PERFECT,
+        GOOD,
+        MISS
     }
 }

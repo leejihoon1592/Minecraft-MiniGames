@@ -1,0 +1,22 @@
+{
+  "key.categories.minigames": "MiniGames",
+  "key.minigames.open_timing_game": "Open Timing Game",
+
+  "screen.minigames.timing.title": "Timing Game",
+  "screen.minigames.timing.ready": "CLICK TO START",
+  "screen.minigames.timing.finished": "FINISHED",
+  "screen.minigames.timing.round": "Round %s / %s",
+
+  "screen.minigames.timing.total": "Total: %s",
+  "screen.minigames.timing.total_score": "Total Score: %s / %s",
+  "screen.minigames.timing.average": "Average: %s",
+  "screen.minigames.timing.score": "Score: %s%%",
+
+  "screen.minigames.timing.fantastic": "FANTASTIC!",
+  "screen.minigames.timing.perfect": "PERFECT!",
+  "screen.minigames.timing.good": "GOOD!",
+  "screen.minigames.timing.miss": "MISS!",
+
+  "screen.minigames.timing.result_summary": "Fantastic: %s    Perfect: %s    Good: %s    Miss: %s",
+  "screen.minigames.timing.close": "Click to Close"
+}

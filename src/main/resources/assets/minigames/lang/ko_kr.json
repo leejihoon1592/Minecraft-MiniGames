@@ -1,0 +1,22 @@
+{
+  "key.categories.minigames": "MiniGames",
+  "key.minigames.open_timing_game": "타이밍 게임 열기",
+
+  "screen.minigames.timing.title": "타이밍 게임",
+  "screen.minigames.timing.ready": "클릭하여 시작",
+  "screen.minigames.timing.finished": "완료",
+  "screen.minigames.timing.round": "라운드 %s / %s",
+
+  "screen.minigames.timing.total": "총점: %s",
+  "screen.minigames.timing.total_score": "총점: %s / %s",
+  "screen.minigames.timing.average": "평균: %s",
+  "screen.minigames.timing.score": "점수: %s%%",
+
+  "screen.minigames.timing.fantastic": "Fantastic",
+  "screen.minigames.timing.perfect": "Perfect",
+  "screen.minigames.timing.good": "Good",
+  "screen.minigames.timing.miss": "Miss",
+
+  "screen.minigames.timing.result_summary": "Fantastic: %s    Perfect: %s    Good: %s    Miss: %s",
+  "screen.minigames.timing.close": "클릭하여 닫기"
+}
