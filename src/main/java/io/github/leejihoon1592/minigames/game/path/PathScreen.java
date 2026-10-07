@@ -657,6 +657,28 @@ public class PathScreen extends Screen {
 
         missCount++;
 
+        /*
+         * 아직 통과하지 않은 체크포인트 중
+         * 가장 뒤쪽의 체크포인트 하나를 제거한다.
+         *
+         * 이미 통과한 체크포인트는
+         * 절대로 제거하지 않는다.
+         */
+
+        for (int i = checkpoints.size() - 1;
+             i >= 0;
+             i--) {
+
+            PathCheckpoint checkpoint =
+                    checkpoints.get(i);
+
+            if (checkpoint.isAvailable()) {
+
+                checkpoint.disable();
+                break;
+            }
+        }
+
         state = GameState.MISS_PAUSED;
 
         currentlyInsidePath = false;
@@ -927,6 +949,15 @@ public class PathScreen extends Screen {
 
         for (PathCheckpoint checkpoint :
                 checkpoints) {
+
+            /*
+             * MISS로 비활성화된 체크포인트는
+             * 화면에 표시하지 않는다.
+             */
+
+            if (checkpoint.isDisabled()) {
+                continue;
+            }
 
             PathSegment.Point point =
                     path.getPointAtProgress(
