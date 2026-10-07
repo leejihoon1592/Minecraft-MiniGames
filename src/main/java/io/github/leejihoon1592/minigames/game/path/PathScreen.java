@@ -31,6 +31,7 @@ public class PathScreen extends Screen {
      */
 
     private static final int CHECKPOINT_COLOR = 0xFFFFFF00;
+    private static final int CHECKPOINT_PASSED_COLOR = 0xFF55FF55;
     private static final int CHECKPOINT_THICKNESS = 3;
 
     /*
@@ -677,6 +678,11 @@ public class PathScreen extends Screen {
         double candidateProgress =
                 closest.pathProgress();
 
+        /*
+         * 뒤로 움직인 경우에는
+         * 진행도를 감소시키지 않는다.
+         */
+
         if (candidateProgress <= progress) {
             return;
         }
@@ -692,14 +698,48 @@ public class PathScreen extends Screen {
                 candidateDistance
                         - currentDistance;
 
+        /*
+         * 지나치게 먼 위치로
+         * 한 번에 건너뛰는 것을 방지한다.
+         */
+
         if (forwardJump
                 > MAX_PROGRESS_JUMP_PIXELS) {
 
             return;
         }
 
+        /*
+         * 진행도 갱신 전 위치
+         */
+
+        double previousProgress =
+                progress;
+
         progress =
                 candidateProgress;
+
+        /*
+         * 이전 위치와 현재 위치 사이에
+         * 체크포인트가 있으면 통과 처리
+         */
+
+        for (PathCheckpoint checkpoint :
+                checkpoints) {
+
+            if (!checkpoint.isAvailable()) {
+                continue;
+            }
+
+            double checkpointProgress =
+                    checkpoint.getProgress();
+
+            if (checkpointProgress > previousProgress
+                    && checkpointProgress <= progress) {
+
+                checkpoint.pass();
+            }
+        }
     }
 
     /*
@@ -907,6 +947,11 @@ public class PathScreen extends Screen {
                             point.y()
                     );
 
+            int checkpointColor =
+                    checkpoint.isPassed()
+                            ? CHECKPOINT_PASSED_COLOR
+                            : CHECKPOINT_COLOR;
+
             /*
              * Path가 가로 방향이면
              * 체크포인트는 세로선
@@ -921,7 +966,7 @@ public class PathScreen extends Screen {
                         x - CHECKPOINT_THICKNESS / 2
                                 + CHECKPOINT_THICKNESS,
                         y + halfPath,
-                        CHECKPOINT_COLOR
+                        checkpointColor
                 );
             }
 
@@ -939,7 +984,7 @@ public class PathScreen extends Screen {
                         x + halfPath,
                         y - CHECKPOINT_THICKNESS / 2
                                 + CHECKPOINT_THICKNESS,
-                        CHECKPOINT_COLOR
+                        checkpointColor
                 );
             }
         }
