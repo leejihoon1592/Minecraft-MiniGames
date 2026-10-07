@@ -136,8 +136,22 @@ public class PathScreen extends Screen {
      * 사용하지 않는다.
      */
 
-    private final List<PathSegment.Point> trailPoints =
+    /*
+     * Trail은 MISS가 발생할 때마다
+     * 서로 독립된 구간으로 나뉜다.
+     *
+     * 각 내부 List가 하나의 연속된 Trail이다.
+     */
+
+    private final List<List<PathSegment.Point>> trailSegments =
             new ArrayList<>();
+
+    /*
+     * 현재 기록 중인 Trail 구간
+     */
+
+    private List<PathSegment.Point> currentTrail =
+            null;
 
     /*
      * Trail 좌표 기록 간격
@@ -428,6 +442,26 @@ public class PathScreen extends Screen {
 
             addAccuracySample(1.0);
 
+            /*
+             * Trail 초기화
+             */
+
+            trailSegments.clear();
+
+            currentTrail = null;
+
+            hasTrailPoint = false;
+
+            /*
+             * START 위치를
+             * 첫 번째 Trail 좌표로 기록
+             */
+
+            updateTrail(
+                    mouseX,
+                    mouseY
+            );
+
             return true;
         }
 
@@ -460,6 +494,20 @@ public class PathScreen extends Screen {
             hasAccuracySample = true;
 
             currentAccuracy = 1.0;
+
+            /*
+             * MISS 이전 Trail과 연결되지 않도록
+             * 새로운 Trail 구간을 시작한다.
+             */
+
+            currentTrail = null;
+
+            hasTrailPoint = false;
+
+            updateTrail(
+                    mouseX,
+                    mouseY
+            );
 
             return true;
         }
@@ -502,6 +550,16 @@ public class PathScreen extends Screen {
          */
 
         if (insidePath) {
+
+            /*
+             * 실제 플레이어의 마우스 이동 경로를
+             * Trail로 기록한다.
+             */
+
+            updateTrail(
+                    mouseX,
+                    mouseY
+            );
 
             boolean progressed =
                     updateProgress(closest);
@@ -677,12 +735,20 @@ public class PathScreen extends Screen {
     ) {
 
         /*
-         * 첫 번째 Trail 좌표
+         * 새로운 Trail 구간 시작
          */
 
-        if (!hasTrailPoint) {
+        if (!hasTrailPoint
+                || currentTrail == null) {
 
-            trailPoints.add(
+            currentTrail =
+                    new ArrayList<>();
+
+            trailSegments.add(
+                    currentTrail
+            );
+
+            currentTrail.add(
                     new PathSegment.Point(
                             mouseX,
                             mouseY
@@ -726,10 +792,11 @@ public class PathScreen extends Screen {
         }
 
         /*
-         * 새로운 Trail 좌표 기록
+         * 현재 Trail 구간에
+         * 새로운 좌표 기록
          */
 
-        trailPoints.add(
+        currentTrail.add(
                 new PathSegment.Point(
                         mouseX,
                         mouseY
@@ -738,6 +805,63 @@ public class PathScreen extends Screen {
 
         lastTrailMouseX = mouseX;
         lastTrailMouseY = mouseY;
+    }
+
+    /*
+     * =========================
+     * Trail 렌더링
+     * =========================
+     */
+
+    private void drawTrail(
+            GuiGraphics graphics
+    ) {
+
+        /*
+         * 각각의 Trail 구간을
+         * 서로 독립적으로 그린다.
+         */
+
+        for (List<PathSegment.Point> trail : trailSegments) {
+
+            /*
+             * 좌표가 하나도 없다면
+             * 그릴 것이 없다.
+             */
+
+            if (trail.isEmpty()) {
+                continue;
+            }
+
+            /*
+             * 현재는 Trail 좌표마다
+             * 작은 사각형을 그린다.
+             *
+             * 기록 간격이 3px이므로
+             * 화면에서는 하나의 선처럼 보인다.
+             */
+
+            for (PathSegment.Point point : trail) {
+
+                int x =
+                        (int) Math.round(
+                                point.x()
+                        );
+
+                int y =
+                        (int) Math.round(
+                                point.y()
+                        );
+
+                graphics.fill(
+                        x - 1,
+                        y - 1,
+                        x + 2,
+                        y + 2,
+                        0xFF55AAFF
+                );
+            }
+        }
     }
 
     /*
@@ -832,6 +956,16 @@ public class PathScreen extends Screen {
          */
 
         hasAccuracySample = false;
+
+        /*
+         * 현재 Trail 구간도 여기서 종료한다.
+         *
+         * 초록점으로 돌아가는 동안의
+         * 마우스 이동은 Trail에 기록하지 않는다.
+         */
+
+        currentTrail = null;
+        hasTrailPoint = false;
     }
 
     /*
