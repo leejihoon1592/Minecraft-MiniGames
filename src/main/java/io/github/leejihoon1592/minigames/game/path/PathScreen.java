@@ -1116,12 +1116,20 @@ public class PathScreen extends Screen {
         PathSegment.Point end =
                 path.getPointAtProgress(1.0);
 
-        return distance(
-                mouseX,
-                mouseY,
-                end.x(),
-                end.y()
-        ) <= PATH_THICKNESS / 2.0;
+        /*
+         * 화면에 표시되는 END 빨간선의
+         * 실제 두께를 기준으로 판정한다.
+         *
+         * END 선은 현재 중심 기준
+         * 좌우 3px 폭으로 그려진다.
+         */
+
+        double endHalfWidth = 3.0;
+
+        return mouseX >= end.x() - endHalfWidth
+                && mouseX <= end.x() + endHalfWidth
+                && mouseY >= end.y() - PATH_THICKNESS / 2.0
+                && mouseY <= end.y() + PATH_THICKNESS / 2.0;
     }
 
     /*
