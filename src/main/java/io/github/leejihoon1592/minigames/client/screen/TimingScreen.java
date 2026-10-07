@@ -1,5 +1,6 @@
 package io.github.leejihoon1592.minigames.client.screen;
 
+import io.github.leejihoon1592.minigames.game.timing.TimingGame;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -10,7 +11,6 @@ public class TimingScreen extends Screen {
     private static final int BAR_WIDTH = 600;
     private static final int BAR_HEIGHT = 20;
 
-    // 중앙 기준 판정 범위
     private static final int GOOD_HALF_WIDTH = 60;
     private static final int PERFECT_HALF_WIDTH = 35;
     private static final int FANTASTIC_HALF_WIDTH = 12;
@@ -18,13 +18,13 @@ public class TimingScreen extends Screen {
     private static final int POINTER_WIDTH = 4;
     private static final int POINTER_HEIGHT = 32;
 
-    // 포인터가 한쪽 끝에서 반대쪽 끝까지 이동하는 시간
     private static final double TRAVEL_TIME_SECONDS = 1.5;
+
+    private static final int MAX_ROUNDS = 5;
 
     private long startTime;
 
-    // 마지막 판정 결과
-    private Judgement lastJudgement = null;
+    private TimingGame game;
 
     public TimingScreen() {
         super(Component.literal("Timing Game"));
@@ -34,8 +34,8 @@ public class TimingScreen extends Screen {
     protected void init() {
         super.init();
 
-        // 화면이 열린 순간을 시작 시각으로 저장
         this.startTime = System.nanoTime();
+        this.game = new TimingGame(MAX_ROUNDS);
     }
 
     @Override
@@ -50,7 +50,6 @@ public class TimingScreen extends Screen {
         int centerX = this.width / 2;
         int centerY = this.height / 2;
 
-        // 작은 해상도에서도 화면 밖으로 나가지 않도록 제한
         int barWidth = Math.min(BAR_WIDTH, this.width - 40);
 
         int barX = centerX - barWidth / 2;
@@ -58,7 +57,45 @@ public class TimingScreen extends Screen {
 
         /*
          * =========================
-         * 기본 바 - MISS 영역
+         * 제목 / 라운드
+         * =========================
+         */
+
+        graphics.drawCenteredString(
+                this.font,
+                "Timing Game",
+                centerX,
+                barY - 55,
+                0xFFFFFFFF
+        );
+
+        if (!game.isFinished()) {
+
+            graphics.drawCenteredString(
+                    this.font,
+                    "Round "
+                            + (game.getCurrentRound() + 1)
+                            + " / "
+                            + game.getMaxRounds(),
+                    centerX,
+                    barY - 38,
+                    0xFFFFFFFF
+            );
+
+        } else {
+
+            graphics.drawCenteredString(
+                    this.font,
+                    "FINISHED",
+                    centerX,
+                    barY - 38,
+                    0xFFFFD700
+            );
+        }
+
+        /*
+         * =========================
+         * 기본 바 - MISS
          * =========================
          */
 
@@ -72,7 +109,7 @@ public class TimingScreen extends Screen {
 
         /*
          * =========================
-         * GOOD 영역
+         * GOOD
          * =========================
          */
 
@@ -86,7 +123,7 @@ public class TimingScreen extends Screen {
 
         /*
          * =========================
-         * PERFECT 영역
+         * PERFECT
          * =========================
          */
 
@@ -100,7 +137,7 @@ public class TimingScreen extends Screen {
 
         /*
          * =========================
-         * FANTASTIC 영역
+         * FANTASTIC
          * =========================
          */
 
@@ -118,64 +155,104 @@ public class TimingScreen extends Screen {
          * =========================
          */
 
-        int pointerCenterX = calculatePointerX(barX, barWidth);
+        if (!game.isFinished()) {
 
-        int pointerX =
-                pointerCenterX - POINTER_WIDTH / 2;
+            int pointerCenterX =
+                    calculatePointerX(barX, barWidth);
 
-        graphics.fill(
-                pointerX,
-                barY - (POINTER_HEIGHT - BAR_HEIGHT) / 2,
-                pointerX + POINTER_WIDTH,
-                barY + BAR_HEIGHT + (POINTER_HEIGHT - BAR_HEIGHT) / 2,
-                0xFFFFFFFF
-        );
+            int pointerX =
+                    pointerCenterX - POINTER_WIDTH / 2;
 
-        /*
-         * =========================
-         * 제목
-         * =========================
-         */
-
-        graphics.drawCenteredString(
-                this.font,
-                "Timing Game",
-                centerX,
-                barY - 40,
-                0xFFFFFFFF
-        );
+            graphics.fill(
+                    pointerX,
+                    barY - (POINTER_HEIGHT - BAR_HEIGHT) / 2,
+                    pointerX + POINTER_WIDTH,
+                    barY + BAR_HEIGHT
+                            + (POINTER_HEIGHT - BAR_HEIGHT) / 2,
+                    0xFFFFFFFF
+            );
+        }
 
         /*
          * =========================
-         * 판정 결과
+         * 마지막 판정
          * =========================
          */
+
+        TimingGame.Judgement lastJudgement =
+                game.getLastJudgement();
 
         if (lastJudgement != null) {
 
             graphics.drawCenteredString(
                     this.font,
-                    lastJudgement.displayName,
+                    lastJudgement.getDisplayName(),
                     centerX,
                     barY + 40,
-                    lastJudgement.color
+                    lastJudgement.getColor()
             );
+        }
+
+        /*
+         * =========================
+         * 진행 중 점수
+         * =========================
+         */
+
+        if (!game.isFinished()) {
 
             graphics.drawCenteredString(
                     this.font,
-                    "Score: " + lastJudgement.score,
+                    "Total: " + game.getTotalScore(),
                     centerX,
-                    barY + 55,
+                    barY + 58,
                     0xFFFFFFFF
             );
         }
 
-        super.render(graphics, mouseX, mouseY, partialTick);
+        /*
+         * =========================
+         * 최종 결과
+         * =========================
+         */
+
+        if (game.isFinished()) {
+
+            graphics.drawCenteredString(
+                    this.font,
+                    "Total Score: "
+                            + game.getTotalScore()
+                            + " / "
+                            + game.getMaximumScore(),
+                    centerX,
+                    barY + 58,
+                    0xFFFFFFFF
+            );
+
+            graphics.drawCenteredString(
+                    this.font,
+                    "Average: "
+                            + String.format(
+                            "%.1f",
+                            game.getAverageScore()
+                    ),
+                    centerX,
+                    barY + 75,
+                    0xFFFFFFFF
+            );
+        }
+
+        super.render(
+                graphics,
+                mouseX,
+                mouseY,
+                partialTick
+        );
     }
 
     /*
      * =========================
-     * 좌클릭 입력
+     * 좌클릭
      * =========================
      */
 
@@ -186,18 +263,66 @@ public class TimingScreen extends Screen {
             int button
     ) {
 
-        // 마우스 왼쪽 버튼
-        if (button == 0) {
-            judgeTiming();
+        if (button == 0 && !game.isFinished()) {
+
+            submitTiming();
+
             return true;
         }
 
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(
+                mouseX,
+                mouseY,
+                button
+        );
     }
 
     /*
      * =========================
-     * 현재 포인터 위치 계산
+     * 클릭 판정 전달
+     * =========================
+     */
+
+    private void submitTiming() {
+
+        int centerX = this.width / 2;
+
+        int barWidth =
+                Math.min(
+                        BAR_WIDTH,
+                        this.width - 40
+                );
+
+        int barX =
+                centerX - barWidth / 2;
+
+        int pointerCenterX =
+                calculatePointerX(
+                        barX,
+                        barWidth
+                );
+
+        /*
+         * 중앙에서 얼마나 떨어졌는지를
+         * 바 절반 길이를 기준으로 0.0 ~ 1.0으로 변환
+         *
+         * 중앙 = 0.0
+         * 끝   = 1.0
+         */
+
+        double halfBarWidth =
+                barWidth / 2.0;
+
+        double distanceFromCenter =
+                Math.abs(pointerCenterX - centerX)
+                        / halfBarWidth;
+
+        game.submit(distanceFromCenter);
+    }
+
+    /*
+     * =========================
+     * 포인터 위치 계산
      * =========================
      */
 
@@ -210,9 +335,9 @@ public class TimingScreen extends Screen {
                 (System.nanoTime() - this.startTime)
                         / 1_000_000_000.0;
 
-        // 0 → 1 → 0 → 1 왕복
         double cycle =
-                elapsedSeconds / TRAVEL_TIME_SECONDS;
+                elapsedSeconds
+                        / TRAVEL_TIME_SECONDS;
 
         double cyclePosition =
                 cycle % 2.0;
@@ -220,104 +345,25 @@ public class TimingScreen extends Screen {
         double progress;
 
         if (cyclePosition <= 1.0) {
+
             progress = cyclePosition;
+
         } else {
+
             progress = 2.0 - cyclePosition;
         }
 
         progress =
-                Mth.clamp(progress, 0.0, 1.0);
+                Mth.clamp(
+                        progress,
+                        0.0,
+                        1.0
+                );
 
         return barX
-                + (int) Math.round(progress * barWidth);
-    }
-
-    /*
-     * =========================
-     * 판정
-     * =========================
-     */
-
-    private void judgeTiming() {
-
-        int centerX = this.width / 2;
-
-        int barWidth =
-                Math.min(BAR_WIDTH, this.width - 40);
-
-        int barX =
-                centerX - barWidth / 2;
-
-        // 클릭한 바로 그 순간의 위치를 계산
-        int pointerCenterX =
-                calculatePointerX(barX, barWidth);
-
-        int distance =
-                Math.abs(pointerCenterX - centerX);
-
-        if (distance <= FANTASTIC_HALF_WIDTH) {
-
-            lastJudgement = Judgement.FANTASTIC;
-
-        } else if (distance <= PERFECT_HALF_WIDTH) {
-
-            lastJudgement = Judgement.PERFECT;
-
-        } else if (distance <= GOOD_HALF_WIDTH) {
-
-            lastJudgement = Judgement.GOOD;
-
-        } else {
-
-            lastJudgement = Judgement.MISS;
-        }
-    }
-
-    /*
-     * =========================
-     * 판정 종류
-     * =========================
-     */
-
-    private enum Judgement {
-
-        FANTASTIC(
-                "FANTASTIC!",
-                100,
-                0xFF55AAFF
-        ),
-
-        PERFECT(
-                "PERFECT!",
-                80,
-                0xFFE0B040
-        ),
-
-        GOOD(
-                "GOOD!",
-                50,
-                0xFF55FF55
-        ),
-
-        MISS(
-                "MISS!",
-                0,
-                0xFFFF5555
+                + (int) Math.round(
+                progress * barWidth
         );
-
-        private final String displayName;
-        private final int score;
-        private final int color;
-
-        Judgement(
-                String displayName,
-                int score,
-                int color
-        ) {
-            this.displayName = displayName;
-            this.score = score;
-            this.color = color;
-        }
     }
 
     @Override
