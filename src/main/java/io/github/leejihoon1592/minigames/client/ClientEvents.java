@@ -98,8 +98,17 @@ public final class ClientEvents {
              * Timing Game
              */
             while (OPEN_TIMING_GAME.consumeClick()) {
+
                 minecraft.setScreen(
-                        new TimingScreen()
+                        new TimingScreen(
+                                io.github.leejihoon1592.minigames.game.timing.TimingConfig.defaultConfig(),
+                                result -> {
+
+                                    if (minecraft.player == null) {
+                                        return;
+                                    }
+                                }
+                        )
                 );
             }
 
@@ -108,8 +117,16 @@ public final class ClientEvents {
              * Path Game
              */
             while (OPEN_PATH_GAME.consumeClick()) {
+
                 minecraft.setScreen(
-                        new PathScreen()
+                        new PathScreen(
+                                result -> {
+
+                                    if (minecraft.player == null) {
+                                        return;
+                                    }
+                                }
+                        )
                 );
             }
         }

@@ -1,6 +1,7 @@
 {
   "key.categories.minigames": "MiniGames",
   "key.minigames.open_timing_game": "Open Timing Game",
+  "key.minigames.open_path_game": "Open Path Game",
 
   "screen.minigames.timing.title": "Timing Game",
   "screen.minigames.timing.ready": "CLICK TO START",
@@ -18,5 +19,24 @@
   "screen.minigames.timing.miss": "MISS!",
 
   "screen.minigames.timing.result_summary": "Fantastic: %s    Perfect: %s    Good: %s    Miss: %s",
-  "screen.minigames.timing.close": "Click to Close"
+  "screen.minigames.timing.close": "Click to Close",
+
+  "screen.minigames.path.title": "Path Game",
+  "screen.minigames.path.move_to_start": "MOVE TO START",
+  "screen.minigames.path.click_to_start": "CLICK TO START",
+  "screen.minigames.path.inside": "PATH : INSIDE",
+  "screen.minigames.path.outside": "PATH : OUTSIDE",
+  "screen.minigames.path.return_to_restart": "MISS - RETURN TO GREEN POINT",
+  "screen.minigames.path.click_to_resume": "CLICK TO RESUME",
+  "screen.minigames.path.finished": "FINISHED",
+
+  "screen.minigames.path.progress": "Progress : %s%%",
+  "screen.minigames.path.accuracy": "Accuracy : %s%%",
+  "screen.minigames.path.current": "Current : %s%%",
+  "screen.minigames.path.miss": "Miss : %s",
+
+  "screen.minigames.path.quality": "Quality : %s",
+  "screen.minigames.path.work": "Work : %s / %s",
+  "screen.minigames.path.disabled": "Disabled : %s",
+  "screen.minigames.path.completed": "Completed : %s"
 }

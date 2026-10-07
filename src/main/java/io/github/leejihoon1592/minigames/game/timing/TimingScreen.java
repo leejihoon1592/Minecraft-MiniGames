@@ -7,6 +7,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 
 import java.util.Locale;
+import java.util.function.Consumer;
 
 public class TimingScreen extends Screen {
 
@@ -21,16 +22,41 @@ public class TimingScreen extends Screen {
     private final TimingConfig config;
     private final TimingGame game;
 
+    /*
+     * =========================
+     * 결과 콜백
+     * =========================
+     */
+
+    private final Consumer<TimingResult> resultCallback;
+
     private GameState state;
 
     private long countdownStartTime;
     private long gameStartTime;
 
     public TimingScreen() {
-        this(TimingConfig.defaultConfig());
+        this(
+                TimingConfig.defaultConfig(),
+                result -> {
+                }
+        );
     }
 
-    public TimingScreen(TimingConfig config) {
+    public TimingScreen(
+            TimingConfig config
+    ) {
+        this(
+                config,
+                result -> {
+                }
+        );
+    }
+
+    public TimingScreen(
+            TimingConfig config,
+            Consumer<TimingResult> resultCallback
+    ) {
         super(
                 Component.translatable(
                         "screen.minigames.timing.title"
@@ -45,6 +71,12 @@ public class TimingScreen extends Screen {
 
         this.config = config;
         this.game = new TimingGame(config);
+
+        this.resultCallback =
+                resultCallback != null
+                        ? resultCallback
+                        : result -> {
+                };
 
         this.state = GameState.READY;
     }
@@ -533,7 +565,17 @@ public class TimingScreen extends Screen {
                 submitTiming();
 
                 if (game.isFinished()) {
+
                     state = GameState.FINISHED;
+
+                    /*
+                     * 마지막 라운드가 끝난 순간
+                     * TimingResult를 호출한 쪽으로 전달한다.
+                     */
+
+                    resultCallback.accept(
+                            game.getResult()
+                    );
                 }
 
                 return true;

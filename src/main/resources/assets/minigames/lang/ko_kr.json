@@ -1,6 +1,7 @@
 {
   "key.categories.minigames": "MiniGames",
   "key.minigames.open_timing_game": "타이밍 게임 열기",
+  "key.minigames.open_path_game": "경로 게임 열기",
 
   "screen.minigames.timing.title": "타이밍 게임",
   "screen.minigames.timing.ready": "클릭하여 시작",
@@ -18,5 +19,24 @@
   "screen.minigames.timing.miss": "Miss",
 
   "screen.minigames.timing.result_summary": "Fantastic: %s    Perfect: %s    Good: %s    Miss: %s",
-  "screen.minigames.timing.close": "클릭하여 닫기"
+  "screen.minigames.timing.close": "클릭하여 닫기",
+
+  "screen.minigames.path.title": "경로 게임",
+  "screen.minigames.path.move_to_start": "시작점으로 이동",
+  "screen.minigames.path.click_to_start": "클릭하여 시작",
+  "screen.minigames.path.inside": "경로 안쪽",
+  "screen.minigames.path.outside": "경로 밖",
+  "screen.minigames.path.return_to_restart": "실패 - 초록 지점으로 돌아가세요",
+  "screen.minigames.path.click_to_resume": "클릭하여 재개",
+  "screen.minigames.path.finished": "완료",
+
+  "screen.minigames.path.progress": "진행도 : %s%%",
+  "screen.minigames.path.accuracy": "정확도 : %s%%",
+  "screen.minigames.path.current": "현재 정확도 : %s%%",
+  "screen.minigames.path.miss": "실패 : %s",
+
+  "screen.minigames.path.quality": "품질 : %s",
+  "screen.minigames.path.work": "작업량 : %s / %s",
+  "screen.minigames.path.disabled": "비활성화 : %s",
+  "screen.minigames.path.completed": "완료 여부 : %s"
 }

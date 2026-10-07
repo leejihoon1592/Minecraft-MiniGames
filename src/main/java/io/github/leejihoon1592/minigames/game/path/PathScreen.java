@@ -231,7 +231,9 @@ public class PathScreen extends Screen {
             Consumer<PathResult> resultCallback
     ) {
         super(
-                Component.literal("Path Game")
+                Component.translatable(
+                        "screen.minigames.path.title"
+                )
         );
 
         this.resultCallback =
@@ -1729,7 +1731,7 @@ public class PathScreen extends Screen {
             double mouseY
     ) {
 
-        String mainText;
+        Component mainText;
         int mainColor;
 
         switch (state) {
@@ -1739,7 +1741,9 @@ public class PathScreen extends Screen {
                 if (insideStart) {
 
                     mainText =
-                            "CLICK TO START";
+                            Component.translatable(
+                                    "screen.minigames.path.click_to_start"
+                            );
 
                     mainColor =
                             0xFF55FF55;
@@ -1747,7 +1751,9 @@ public class PathScreen extends Screen {
                 } else {
 
                     mainText =
-                            "MOVE TO START";
+                            Component.translatable(
+                                    "screen.minigames.path.move_to_start"
+                            );
 
                     mainColor =
                             0xFFFFFFFF;
@@ -1759,7 +1765,9 @@ public class PathScreen extends Screen {
                 if (insidePath) {
 
                     mainText =
-                            "PATH : INSIDE";
+                            Component.translatable(
+                                    "screen.minigames.path.inside"
+                            );
 
                     mainColor =
                             0xFF55FF55;
@@ -1767,7 +1775,9 @@ public class PathScreen extends Screen {
                 } else {
 
                     mainText =
-                            "PATH : OUTSIDE";
+                            Component.translatable(
+                                    "screen.minigames.path.outside"
+                            );
 
                     mainColor =
                             0xFFFF5555;
@@ -1782,7 +1792,9 @@ public class PathScreen extends Screen {
                 )) {
 
                     mainText =
-                            "CLICK TO RESUME";
+                            Component.translatable(
+                                    "screen.minigames.path.click_to_resume"
+                            );
 
                     mainColor =
                             0xFF55FF55;
@@ -1790,7 +1802,9 @@ public class PathScreen extends Screen {
                 } else {
 
                     mainText =
-                            "MISS - RETURN TO GREEN POINT";
+                            Component.translatable(
+                                    "screen.minigames.path.return_to_restart"
+                            );
 
                     mainColor =
                             0xFFFF5555;
@@ -1800,7 +1814,9 @@ public class PathScreen extends Screen {
             case FINISHED -> {
 
                 mainText =
-                        "FINISHED";
+                        Component.translatable(
+                                "screen.minigames.path.finished"
+                        );
 
                 mainColor =
                         0xFFFFD700;
@@ -1808,7 +1824,8 @@ public class PathScreen extends Screen {
 
             default -> {
 
-                mainText = "";
+                mainText =
+                        Component.empty();
 
                 mainColor =
                         0xFFFFFFFF;
@@ -1825,32 +1842,33 @@ public class PathScreen extends Screen {
 
         if (state != GameState.READY) {
 
-            String progressText =
+            String progressValue =
                     String.format(
                             Locale.ROOT,
-                            "Progress : %.1f%%",
+                            "%.1f",
                             progress * 100.0
                     );
 
-            String accuracyText =
+            String accuracyValue =
                     String.format(
                             Locale.ROOT,
-                            "Accuracy : %.1f%%",
-                            getAverageAccuracy()
-                                    * 100.0
+                            "%.1f",
+                            getAverageAccuracy() * 100.0
                     );
 
-            String currentAccuracyText =
+            String currentAccuracyValue =
                     String.format(
                             Locale.ROOT,
-                            "Current : %.1f%%",
-                            currentAccuracy
-                                    * 100.0
+                            "%.1f",
+                            currentAccuracy * 100.0
                     );
 
             graphics.drawCenteredString(
                     this.font,
-                    progressText,
+                    Component.translatable(
+                            "screen.minigames.path.progress",
+                            progressValue
+                    ),
                     this.width / 2,
                     45,
                     0xFFFFFFFF
@@ -1858,7 +1876,10 @@ public class PathScreen extends Screen {
 
             graphics.drawCenteredString(
                     this.font,
-                    accuracyText,
+                    Component.translatable(
+                            "screen.minigames.path.accuracy",
+                            accuracyValue
+                    ),
                     this.width / 2,
                     60,
                     0xFFFFFFFF
@@ -1866,7 +1887,10 @@ public class PathScreen extends Screen {
 
             graphics.drawCenteredString(
                     this.font,
-                    currentAccuracyText,
+                    Component.translatable(
+                            "screen.minigames.path.current",
+                            currentAccuracyValue
+                    ),
                     this.width / 2,
                     75,
                     0xFFAAAAAA
@@ -1874,8 +1898,10 @@ public class PathScreen extends Screen {
 
             graphics.drawCenteredString(
                     this.font,
-                    "Miss : "
-                            + missCount,
+                    Component.translatable(
+                            "screen.minigames.path.miss",
+                            missCount
+                    ),
                     this.width / 2,
                     90,
                     0xFFFFFFFF
@@ -1891,30 +1917,19 @@ public class PathScreen extends Screen {
         if (state == GameState.FINISHED
                 && result != null) {
 
-            String qualityText =
+            String qualityValue =
                     String.format(
                             Locale.ROOT,
-                            "Quality : %.1f",
+                            "%.1f",
                             result.getQualityScore()
                     );
 
-            String checkpointText =
-                    "Work : "
-                            + result.getCheckpointsPassed()
-                            + " / "
-                            + result.getTotalCheckpoints();
-
-            String disabledText =
-                    "Disabled : "
-                            + result.getCheckpointsDisabled();
-
-            String completedText =
-                    "Completed : "
-                            + result.isCompleted();
-
             graphics.drawCenteredString(
                     this.font,
-                    qualityText,
+                    Component.translatable(
+                            "screen.minigames.path.quality",
+                            qualityValue
+                    ),
                     this.width / 2,
                     110,
                     0xFFFFD700
@@ -1922,7 +1937,11 @@ public class PathScreen extends Screen {
 
             graphics.drawCenteredString(
                     this.font,
-                    checkpointText,
+                    Component.translatable(
+                            "screen.minigames.path.work",
+                            result.getCheckpointsPassed(),
+                            result.getTotalCheckpoints()
+                    ),
                     this.width / 2,
                     125,
                     0xFFFFFFFF
@@ -1930,7 +1949,10 @@ public class PathScreen extends Screen {
 
             graphics.drawCenteredString(
                     this.font,
-                    disabledText,
+                    Component.translatable(
+                            "screen.minigames.path.disabled",
+                            result.getCheckpointsDisabled()
+                    ),
                     this.width / 2,
                     140,
                     0xFFFFFFFF
@@ -1938,7 +1960,10 @@ public class PathScreen extends Screen {
 
             graphics.drawCenteredString(
                     this.font,
-                    completedText,
+                    Component.translatable(
+                            "screen.minigames.path.completed",
+                            result.isCompleted()
+                    ),
                     this.width / 2,
                     155,
                     0xFFFFFFFF
