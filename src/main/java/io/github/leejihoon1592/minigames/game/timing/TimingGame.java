@@ -7,6 +7,11 @@ public class TimingGame {
     private int currentRound;
     private int totalScore;
 
+    private int fantasticCount;
+    private int perfectCount;
+    private int goodCount;
+    private int missCount;
+
     private Judgement lastJudgement;
 
     public TimingGame(TimingConfig config) {
@@ -21,6 +26,12 @@ public class TimingGame {
 
         this.currentRound = 0;
         this.totalScore = 0;
+
+        this.fantasticCount = 0;
+        this.perfectCount = 0;
+        this.goodCount = 0;
+        this.missCount = 0;
+
         this.lastJudgement = null;
     }
 
@@ -63,6 +74,25 @@ public class TimingGame {
         this.totalScore +=
                 getScore(judgement);
 
+        /*
+         * 판정별 횟수 기록
+         */
+
+        switch (judgement) {
+
+            case FANTASTIC ->
+                    fantasticCount++;
+
+            case PERFECT ->
+                    perfectCount++;
+
+            case GOOD ->
+                    goodCount++;
+
+            case MISS ->
+                    missCount++;
+        }
+
         this.currentRound++;
 
         return judgement;
@@ -90,6 +120,25 @@ public class TimingGame {
             case MISS ->
                     config.getMissScore();
         };
+    }
+
+    /*
+     * =========================
+     * 최종 결과 생성
+     * =========================
+     */
+
+    public TimingResult getResult() {
+
+        return new TimingResult(
+                totalScore,
+                getMaximumScore(),
+                currentRound,
+                fantasticCount,
+                perfectCount,
+                goodCount,
+                missCount
+        );
     }
 
     /*
