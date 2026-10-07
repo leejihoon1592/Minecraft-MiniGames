@@ -26,6 +26,15 @@ public class PathScreen extends Screen {
 
     /*
      * =========================
+     * 체크포인트 표시
+     * =========================
+     */
+
+    private static final int CHECKPOINT_COLOR = 0xFFFFFF00;
+    private static final int CHECKPOINT_THICKNESS = 3;
+
+    /*
+     * =========================
      * MISS 재시작점
      * =========================
      */
@@ -64,6 +73,30 @@ public class PathScreen extends Screen {
      */
 
     private Path path;
+
+    /*
+     * =========================
+     * 체크포인트
+     * =========================
+     *
+     * 10% ~ 90% = 노란 체크포인트 9개
+     *
+     * END는 마지막 10번째
+     * 제작 단계로 취급한다.
+     */
+
+    private final List<PathCheckpoint> checkpoints =
+            List.of(
+                    new PathCheckpoint(0.10),
+                    new PathCheckpoint(0.20),
+                    new PathCheckpoint(0.30),
+                    new PathCheckpoint(0.40),
+                    new PathCheckpoint(0.50),
+                    new PathCheckpoint(0.60),
+                    new PathCheckpoint(0.70),
+                    new PathCheckpoint(0.80),
+                    new PathCheckpoint(0.90)
+            );
 
     /*
      * =========================
@@ -237,6 +270,7 @@ public class PathScreen extends Screen {
 
         drawPathArea(graphics);
         drawCenterLine(graphics);
+        drawCheckpoints(graphics);
         drawStartAndEnd(graphics);
 
         if (state == GameState.MISS_PAUSED) {
@@ -821,6 +855,91 @@ public class PathScreen extends Screen {
                                 + CENTER_LINE_THICKNESS,
                         bottom,
                         CENTER_LINE_COLOR
+                );
+            }
+        }
+    }
+
+    /*
+     * =========================
+     * 체크포인트 표시
+     * =========================
+     */
+
+    private void drawCheckpoints(
+            GuiGraphics graphics
+    ) {
+
+        int halfPath =
+                PATH_THICKNESS / 2;
+
+        for (PathCheckpoint checkpoint :
+                checkpoints) {
+
+            PathSegment.Point point =
+                    path.getPointAtProgress(
+                            checkpoint.getProgress()
+                    );
+
+            /*
+             * 체크포인트가 위치한 Segment를
+             * 확인한다.
+             */
+
+            Path.ClosestPathPoint closest =
+                    path.findClosestPoint(
+                            point.x(),
+                            point.y()
+                    );
+
+            PathSegment segment =
+                    path.getSegments().get(
+                            closest.segmentIndex()
+                    );
+
+            int x =
+                    (int) Math.round(
+                            point.x()
+                    );
+
+            int y =
+                    (int) Math.round(
+                            point.y()
+                    );
+
+            /*
+             * Path가 가로 방향이면
+             * 체크포인트는 세로선
+             */
+
+            if (segment.getStartY()
+                    == segment.getEndY()) {
+
+                graphics.fill(
+                        x - CHECKPOINT_THICKNESS / 2,
+                        y - halfPath,
+                        x - CHECKPOINT_THICKNESS / 2
+                                + CHECKPOINT_THICKNESS,
+                        y + halfPath,
+                        CHECKPOINT_COLOR
+                );
+            }
+
+            /*
+             * Path가 세로 방향이면
+             * 체크포인트는 가로선
+             */
+
+            else if (segment.getStartX()
+                    == segment.getEndX()) {
+
+                graphics.fill(
+                        x - halfPath,
+                        y - CHECKPOINT_THICKNESS / 2,
+                        x + halfPath,
+                        y - CHECKPOINT_THICKNESS / 2
+                                + CHECKPOINT_THICKNESS,
+                        CHECKPOINT_COLOR
                 );
             }
         }
