@@ -107,6 +107,22 @@ public class FlightScreen extends Screen {
 
     /*
      * =========================
+     * 빨간 통로 이탈 상태
+     * =========================
+     *
+     * 흰색 실의 일부라도
+     * 빨간 통로 경계를 벗어나면 true.
+     *
+     * 실 전체가 통로 안에 있으면 false.
+     *
+     * 이후 MISS 판정과
+     * 점수 차감 처리에 사용한다.
+     */
+
+    private boolean threadOutsideCorridor;
+
+    /*
+     * =========================
      * Flight 게임 점수 관리
      * =========================
      *
@@ -140,6 +156,30 @@ public class FlightScreen extends Screen {
 
     private String bonusMessage = "";
     private int bonusMessageTicks = 0;
+
+    /*
+     * =========================
+     * MISS 이후 포인트 재생성 대기시간
+     * =========================
+     *
+     * MISS가 발생하면 화면에 있는
+     * 노란색과 초록색 포인트를 제거한다.
+     *
+     * pointRespawnCooldownTicks:
+     * 새로운 포인트가 나타나기까지
+     * 남은 대기시간을 저장한다.
+     *
+     * MISS 발생 시 20Tick으로 설정한다.
+     * 20Tick = 약 1초
+     *
+     * 대기시간이 0보다 크면
+     * 포인트 재생성을 허용하지 않는다.
+     *
+     * 대기시간이 0이 되면
+     * 다시 포인트를 생성할 수 있다.
+     */
+
+    private int pointRespawnCooldownTicks = 0;
 
     public FlightScreen() {
         super(Component.literal("Flight Game"));
@@ -367,11 +407,34 @@ public class FlightScreen extends Screen {
          * 새로운 포인트는 다시 활성화된다.
          */
 
-        if (yellowPointX < -YELLOW_POINT_WIDTH) {
+        /*
+         * =========================
+         * 노란 포인트 재생성 제한
+         * =========================
+         *
+         * 노란 포인트가 화면 왼쪽으로
+         * 완전히 벗어났는지 확인한다.
+         *
+         * 동시에 MISS 이후 재생성
+         * 대기시간이 0인지 확인한다.
+         *
+         * 대기시간이 남아 있다면
+         * 노란 포인트를 재생성하지 않는다.
+         *
+         * 대기시간이 끝나면
+         * 기존 재생성 방식을 사용한다.
+         */
+
+        if (yellowPointX < -YELLOW_POINT_WIDTH
+                && pointRespawnCooldownTicks == 0) {
 
             /*
-             * 초록 포인트와
-             * 최소 간격을 확보한다.
+             * =========================
+             * 노란 포인트 재생성 위치
+             * =========================
+             *
+             * 화면 오른쪽에 생성하며
+             * 초록 포인트와 최소 간격을 확보한다.
              */
 
             yellowPointX =
@@ -385,11 +448,21 @@ public class FlightScreen extends Screen {
             previousYellowPointX =
                     yellowPointX;
 
+            /*
+             * 빨간 통로 내부에서
+             * 새로운 Y 좌표를 결정한다.
+             */
+
             yellowPointY =
                     getRandomPointY(
                             yellowPointX,
                             YELLOW_POINT_HEIGHT
                     );
+
+            /*
+             * 새로운 노란 포인트를
+             * 활성화하여 화면에 표시한다.
+             */
 
             yellowPointActive = true;
         }
@@ -474,11 +547,31 @@ public class FlightScreen extends Screen {
          * 새로운 포인트는 다시 활성화된다.
          */
 
-        if (greenPointX < -GREEN_POINT_WIDTH) {
+        /*
+         * =========================
+         * 초록 포인트 재생성 제한
+         * =========================
+         *
+         * 초록 포인트가 화면 왼쪽으로
+         * 완전히 벗어났는지 확인한다.
+         *
+         * MISS 이후 재생성 대기시간이
+         * 0일 때만 새로운 포인트를 생성한다.
+         *
+         * 대기시간이 남아 있다면
+         * 초록 포인트를 재생성하지 않는다.
+         */
+
+        if (greenPointX < -GREEN_POINT_WIDTH
+                && pointRespawnCooldownTicks == 0) {
 
             /*
-             * 노란 포인트와
-             * 최소 간격을 확보한다.
+             * =========================
+             * 초록 포인트 재생성 위치
+             * =========================
+             *
+             * 화면 오른쪽에 생성하며
+             * 노란 포인트와 최소 간격을 확보한다.
              */
 
             greenPointX =
@@ -492,11 +585,21 @@ public class FlightScreen extends Screen {
             previousGreenPointX =
                     greenPointX;
 
+            /*
+             * 빨간 통로 내부에서
+             * 새로운 Y 좌표를 결정한다.
+             */
+
             greenPointY =
                     getRandomPointY(
                             greenPointX,
                             GREEN_POINT_HEIGHT
                     );
+
+            /*
+             * 새로운 초록 포인트를
+             * 활성화하여 화면에 표시한다.
+             */
 
             greenPointActive = true;
         }
@@ -512,6 +615,182 @@ public class FlightScreen extends Screen {
 
         corridorScroll +=
                 POINT_SCROLL_SPEED;
+
+        /*
+         * =========================
+         * 빨간 통로 이탈 판정
+         * =========================
+         *
+         * 흰색 실의 X 좌표는 고정되어 있다.
+         *
+         * 따라서 현재 실이 위치한 X 좌표에서
+         * 빨간 통로의 중심 Y 좌표를 계산한다.
+         *
+         * 통로가 움직이기 때문에
+         * 현재 스크롤 위치를 함께 사용한다.
+         */
+
+        double corridorCenterAtThread =
+                getCorridorCenterY(
+                        corridorScroll + PLAYER_X_OFFSET
+                );
+
+        /*
+         * 현재 실 위치에서의
+         * 빨간 통로 위쪽과 아래쪽 경계
+         */
+
+        double corridorTop =
+                corridorCenterAtThread
+                        - CORRIDOR_HALF_HEIGHT;
+
+        double corridorBottom =
+                corridorCenterAtThread
+                        + CORRIDOR_HALF_HEIGHT;
+
+        /*
+         * =========================
+         * 실의 통로 이탈 여부 확인
+         * =========================
+         *
+         * 실의 위쪽이 통로 위쪽을 벗어나거나
+         * 실의 아래쪽이 통로 아래쪽을 벗어나면
+         * 이탈 상태를 true로 설정한다.
+         *
+         * 실 전체가 통로 내부에 있으면
+         * false로 설정한다.
+         *
+         * 현재는 이탈 상태만 기록하며
+         * MISS 패널티는 적용하지 않는다.
+         */
+
+        /*
+         * =========================
+         * 이전 이탈 상태 저장
+         * =========================
+         *
+         * 현재 판정을 갱신하기 전에
+         * 직전 Tick의 이탈 상태를 저장한다.
+         *
+         * 이를 통해 통로 밖으로 나가는
+         * 순간을 한 번만 감지할 수 있다.
+         */
+
+        boolean wasOutsideCorridor =
+                threadOutsideCorridor;
+
+        /*
+         * =========================
+         * 현재 이탈 상태 갱신
+         * =========================
+         *
+         * 실의 일부라도 빨간 통로를
+         * 벗어나면 true로 설정한다.
+         */
+
+        threadOutsideCorridor =
+                threadY < corridorTop
+                        || threadY + THREAD_HEIGHT > corridorBottom;
+
+        /*
+         * =========================
+         * MISS 발생 및 점수 차감
+         * =========================
+         *
+         * 직전 Tick에는 통로 안에 있었고
+         * 현재 Tick에는 통로 밖에 있다면
+         * 새로운 MISS로 판정한다.
+         *
+         * MISS 1회당 최대점수 -100
+         * MISS 횟수 +1
+         *
+         * 통로 밖에 계속 머무르는 동안에는
+         * 중복으로 MISS를 적용하지 않는다.
+         *
+         * 다시 통로 내부로 복귀한 뒤
+         * 재차 벗어나면 새로운 MISS가 발생한다.
+         */
+
+        if (threadOutsideCorridor
+                && !wasOutsideCorridor) {
+
+            /*
+             * =========================
+             * MISS 점수 패널티
+             * =========================
+             *
+             * MISS 횟수를 1 증가시키고
+             * 최대점수를 100 감소시킨다.
+             *
+             * 현재점수가 최대점수보다 높으면
+             * 현재점수도 최대점수에 맞춘다.
+             */
+
+            flightGame.applyMiss();
+
+            /*
+             * =========================
+             * MISS 발생 시 포인트 제거
+             * =========================
+             *
+             * MISS가 발생하면 화면의
+             * 노란색과 초록색 포인트를
+             * 모두 비활성화한다.
+             *
+             * 비활성화된 포인트는
+             * 화면에 표시되지 않으며
+             * 획득 판정도 발생하지 않는다.
+             */
+
+            /*
+             * =========================
+             * 노랑·초록 포인트 비활성화
+             * =========================
+             *
+             * MISS 발생 순간 두 포인트를
+             * 화면에서 제거한다.
+             *
+             * 비활성화된 포인트는
+             * 획득 판정에서도 제외된다.
+             */
+
+            yellowPointActive = false;
+            greenPointActive = false;
+
+            /*
+             * =========================
+             * 포인트 재생성 대기시간 설정
+             * =========================
+             *
+             * MISS가 발생하면 20Tick 동안
+             * 새로운 포인트 생성을 금지한다.
+             *
+             * 이 시간은 이후 Tick 처리에서
+             * 매번 1씩 감소시킬 예정이다.
+             */
+
+            pointRespawnCooldownTicks = 20;
+        }
+
+        /*
+         * =========================
+         * MISS 이후 포인트 재생성 대기시간 감소
+         * =========================
+         *
+         * MISS 발생 시 설정된 20Tick을
+         * 매 Tick마다 1씩 감소시킨다.
+         *
+         * 대기시간이 0이 되면
+         * 더 이상 감소시키지 않는다.
+         *
+         * 실제 포인트 재생성 제한은
+         * 이후 재생성 처리에서 연결한다.
+         */
+
+        if (pointRespawnCooldownTicks > 0) {
+
+            pointRespawnCooldownTicks--;
+        }
 
         /*
          * =========================
