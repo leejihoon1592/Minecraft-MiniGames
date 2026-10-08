@@ -20,8 +20,8 @@ public class FlightScreen extends Screen {
      * 실 크기
      */
 
-    private static final int THREAD_WIDTH = 8;
-    private static final int THREAD_HEIGHT = 8;
+    private static final int THREAD_WIDTH = 6;
+    private static final int THREAD_HEIGHT = 6;
 
     /*
      * 비행 통로 높이
@@ -40,17 +40,27 @@ public class FlightScreen extends Screen {
      * 노란 포인트 크기
      */
 
-    private static final int YELLOW_POINT_WIDTH = 20;
-    private static final int YELLOW_POINT_HEIGHT = 44;
+    private static final int YELLOW_POINT_WIDTH = 12;
+    private static final int YELLOW_POINT_HEIGHT = 30;
 
     /*
      * 초록 포인트 크기
      */
 
-    private static final int GREEN_POINT_WIDTH = 44;
-    private static final int GREEN_POINT_HEIGHT = 20;
+    private static final int GREEN_POINT_WIDTH = 22;
+    private static final int GREEN_POINT_HEIGHT = 22;
+
+    /*
+     * 포인트 이동 속도
+     */
 
     private static final double POINT_SCROLL_SPEED = 4.0;
+
+    /*
+     * 포인트 최소 간격
+     */
+
+    private static final double MIN_POINT_GAP = 160.0;
 
     /*
      * =========================
@@ -109,9 +119,6 @@ public class FlightScreen extends Screen {
         this.velocityY =
                 0.0;
 
-        this.velocityY =
-                0.0;
-
         /* 노란 포인트 */
 
         this.yellowPointX =
@@ -121,22 +128,26 @@ public class FlightScreen extends Screen {
                 this.yellowPointX;
 
         this.yellowPointY =
-                this.height / 2.0
-                        - YELLOW_POINT_HEIGHT / 2.0;
+                getRandomPointY(
+                        this.yellowPointX,
+                        YELLOW_POINT_HEIGHT
+                );
 
         /* 초록 포인트 */
 
         this.greenPointX =
-                this.width
+                this.yellowPointX
                         + YELLOW_POINT_WIDTH
-                        + 220;
+                        + MIN_POINT_GAP;
 
         this.previousGreenPointX =
                 this.greenPointX;
 
         this.greenPointY =
-                this.height / 2.0
-                        - GREEN_POINT_HEIGHT / 2.0;
+                getRandomPointY(
+                        this.greenPointX,
+                        GREEN_POINT_HEIGHT
+                );
 
         /* 빨간 통로 */
 
@@ -249,11 +260,26 @@ public class FlightScreen extends Screen {
 
         if (yellowPointX < -YELLOW_POINT_WIDTH) {
 
+            /*
+             * 노란 포인트는
+             * 초록 포인트 뒤에서 최소 간격을 확보한다.
+             */
+
             yellowPointX =
-                    this.width + YELLOW_POINT_WIDTH;
+                    Math.max(
+                            this.width + YELLOW_POINT_WIDTH,
+                            greenPointX
+                                    + GREEN_POINT_WIDTH
+                                    + MIN_POINT_GAP
+                    );
 
             previousYellowPointX =
                     yellowPointX;
+            yellowPointY =
+                    getRandomPointY(
+                            yellowPointX,
+                            YELLOW_POINT_HEIGHT
+                    );
         }
 
         /* 초록 포인트 */
@@ -266,13 +292,27 @@ public class FlightScreen extends Screen {
 
         if (greenPointX < -GREEN_POINT_WIDTH) {
 
+            /*
+             * 초록 포인트는
+             * 노란 포인트 뒤에서 최소 간격을 확보한다.
+             */
+
             greenPointX =
-                    this.width
-                            + GREEN_POINT_WIDTH
-                            + 220;
+                    Math.max(
+                            this.width + GREEN_POINT_WIDTH,
+                            yellowPointX
+                                    + YELLOW_POINT_WIDTH
+                                    + MIN_POINT_GAP
+                    );
 
             previousGreenPointX =
                     greenPointX;
+
+            greenPointY =
+                    getRandomPointY(
+                            greenPointX,
+                            GREEN_POINT_HEIGHT
+                    );
         }
         /*
          * =========================
@@ -629,6 +669,60 @@ public class FlightScreen extends Screen {
 
         return center;
     }
+
+    /*
+     * =========================
+     * 포인트 랜덤 Y 위치
+     * =========================
+     */
+
+    private double getRandomPointY(
+            double pointScreenX,
+            int pointHeight
+    ) {
+
+        /*
+         * 현재 화면 X 위치가
+         * 빨간 통로의 어느 위치에 해당하는지 계산
+         */
+
+        double worldX =
+                corridorScroll
+                        + pointScreenX;
+
+        double corridorCenterY =
+                getCorridorCenterY(
+                        worldX
+                );
+
+        /*
+         * 빨간선과 포인트 사이에
+         * 약간의 여유를 둔다.
+         */
+
+        double margin =
+                6.0;
+
+        double minY =
+                corridorCenterY
+                        - CORRIDOR_HALF_HEIGHT
+                        + margin;
+
+        double maxY =
+                corridorCenterY
+                        + CORRIDOR_HALF_HEIGHT
+                        - pointHeight
+                        - margin;
+
+        /*
+         * 통로 안쪽에서만 랜덤 생성
+         */
+
+        return minY
+                + Math.random()
+                * (maxY - minY);
+    }
+
     @Override
     public boolean isPauseScreen() {
         return false;
