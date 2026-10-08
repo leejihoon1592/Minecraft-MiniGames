@@ -38,6 +38,7 @@ public class FlightScreen extends Screen {
      */
 
     private double threadY;
+    private double previousThreadY;
     private double velocityY;
 
     public FlightScreen() {
@@ -50,12 +51,24 @@ public class FlightScreen extends Screen {
         this.threadY =
                 this.height / 2.0;
 
+        this.previousThreadY =
+                this.threadY;
+
         this.velocityY =
                 0.0;
     }
 
     @Override
     public void tick() {
+
+        /*
+         * 렌더 보간용
+         * 현재 위치를 갱신하기 전에
+         * 이전 위치를 저장한다.
+         */
+
+        previousThreadY =
+                threadY;
 
         /*
          * 좌클릭을 누르고 있는 동안
@@ -76,14 +89,16 @@ public class FlightScreen extends Screen {
 
         if (holdingLeftMouse) {
 
-            velocityY -= HOLD_FORCE;
+            velocityY -=
+                    HOLD_FORCE;
         }
 
         /*
          * 중력
          */
 
-        velocityY += GRAVITY;
+        velocityY +=
+                GRAVITY;
 
         velocityY =
                 Mth.clamp(
@@ -96,7 +111,8 @@ public class FlightScreen extends Screen {
          * Y 이동
          */
 
-        threadY += velocityY;
+        threadY +=
+                velocityY;
 
         /*
          * 화면 위 / 아래 제한
@@ -112,14 +128,20 @@ public class FlightScreen extends Screen {
 
         if (threadY < minY) {
 
-            threadY = minY;
-            velocityY = 0.0;
+            threadY =
+                    minY;
+
+            velocityY =
+                    0.0;
         }
 
         if (threadY > maxY) {
 
-            threadY = maxY;
-            velocityY = 0.0;
+            threadY =
+                    maxY;
+
+            velocityY =
+                    0.0;
         }
     }
 
@@ -178,9 +200,22 @@ public class FlightScreen extends Screen {
         int threadX =
                 PLAYER_X_OFFSET;
 
+        /*
+         * 이전 Tick 위치와
+         * 현재 Tick 위치 사이를 보간해서
+         * 화면 움직임을 부드럽게 만든다.
+         */
+
+        double interpolatedY =
+                Mth.lerp(
+                        partialTick,
+                        previousThreadY,
+                        threadY
+                );
+
         int renderY =
                 (int) Math.round(
-                        threadY
+                        interpolatedY
                 );
 
         graphics.fill(
