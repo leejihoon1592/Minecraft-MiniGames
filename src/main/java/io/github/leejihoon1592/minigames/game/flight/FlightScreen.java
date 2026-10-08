@@ -30,11 +30,25 @@ public class FlightScreen extends Screen {
     private static final int FLIGHT_AREA_HEIGHT = 210;
 
     /*
+     * 빨간 통로
+     */
+
+    private static final int CORRIDOR_HALF_HEIGHT = 38;
+    private static final int CORRIDOR_LINE_THICKNESS = 3;
+
+    /*
      * 노란 포인트 크기
      */
 
-    private static final int POINT_WIDTH = 20;
-    private static final int POINT_HEIGHT = 44;
+    private static final int YELLOW_POINT_WIDTH = 20;
+    private static final int YELLOW_POINT_HEIGHT = 44;
+
+    /*
+     * 초록 포인트 크기
+     */
+
+    private static final int GREEN_POINT_WIDTH = 44;
+    private static final int GREEN_POINT_HEIGHT = 20;
 
     private static final double POINT_SCROLL_SPEED = 4.0;
 
@@ -56,12 +70,28 @@ public class FlightScreen extends Screen {
      * =========================
      */
 
+    /* 실 */
+
     private double threadY;
     private double previousThreadY;
     private double velocityY;
-    private double pointX;
-    private double previousPointX;
-    private double pointY;
+
+    /* 노란 포인트 */
+
+    private double yellowPointX;
+    private double previousYellowPointX;
+    private double yellowPointY;
+
+    /* 초록 포인트 */
+
+    private double greenPointX;
+    private double previousGreenPointX;
+    private double greenPointY;
+
+    /* 빨간 통로 */
+
+    private double corridorScroll;
+    private double previousCorridorScroll;
 
     public FlightScreen() {
         super(Component.literal("Flight Game"));
@@ -79,15 +109,43 @@ public class FlightScreen extends Screen {
         this.velocityY =
                 0.0;
 
-        this.pointX =
-                this.width + POINT_WIDTH;
+        this.velocityY =
+                0.0;
 
-        this.previousPointX =
-                this.pointX;
+        /* 노란 포인트 */
 
-        this.pointY =
+        this.yellowPointX =
+                this.width + YELLOW_POINT_WIDTH;
+
+        this.previousYellowPointX =
+                this.yellowPointX;
+
+        this.yellowPointY =
                 this.height / 2.0
-                        - POINT_HEIGHT / 2.0;
+                        - YELLOW_POINT_HEIGHT / 2.0;
+
+        /* 초록 포인트 */
+
+        this.greenPointX =
+                this.width
+                        + YELLOW_POINT_WIDTH
+                        + 220;
+
+        this.previousGreenPointX =
+                this.greenPointX;
+
+        this.greenPointY =
+                this.height / 2.0
+                        - GREEN_POINT_HEIGHT / 2.0;
+
+        /* 빨간 통로 */
+
+        this.corridorScroll =
+                0.0;
+
+        this.previousCorridorScroll =
+                0.0;
+
     }
 
     @Override
@@ -181,25 +239,52 @@ public class FlightScreen extends Screen {
          * 노란 포인트 스크롤
          */
 
-        previousPointX =
-                pointX;
+        /* 노란 포인트 */
 
-        pointX -=
+        previousYellowPointX =
+                yellowPointX;
+
+        yellowPointX -=
                 POINT_SCROLL_SPEED;
 
+        if (yellowPointX < -YELLOW_POINT_WIDTH) {
+
+            yellowPointX =
+                    this.width + YELLOW_POINT_WIDTH;
+
+            previousYellowPointX =
+                    yellowPointX;
+        }
+
+        /* 초록 포인트 */
+
+        previousGreenPointX =
+                greenPointX;
+
+        greenPointX -=
+                POINT_SCROLL_SPEED;
+
+        if (greenPointX < -GREEN_POINT_WIDTH) {
+
+            greenPointX =
+                    this.width
+                            + GREEN_POINT_WIDTH
+                            + 220;
+
+            previousGreenPointX =
+                    greenPointX;
+        }
         /*
-         * 화면 왼쪽을 완전히 벗어나면
-         * 다시 오른쪽으로 이동시킨다.
+         * =========================
+         * 빨간 통로 스크롤
+         * =========================
          */
 
-        if (pointX < -POINT_WIDTH) {
+        previousCorridorScroll =
+                corridorScroll;
 
-            pointX =
-                    this.width + POINT_WIDTH;
-
-            previousPointX =
-                    pointX;
-        }
+        corridorScroll +=
+                POINT_SCROLL_SPEED;
     }
 
     @Override
@@ -260,6 +345,14 @@ public class FlightScreen extends Screen {
                 bottom,
                 0xFF666666
         );
+        /*
+         * 빨간 통로
+         */
+
+        drawCorridor(
+                graphics,
+                partialTick
+        );
 
         /*
          * =========================
@@ -267,29 +360,58 @@ public class FlightScreen extends Screen {
          * =========================
          */
 
-        double interpolatedPointX =
+        /* 노란 포인트 */
+
+        double interpolatedYellowPointX =
                 Mth.lerp(
                         partialTick,
-                        previousPointX,
-                        pointX
+                        previousYellowPointX,
+                        yellowPointX
                 );
 
-        int renderPointX =
+        int renderYellowPointX =
                 (int) Math.round(
-                        interpolatedPointX
+                        interpolatedYellowPointX
                 );
 
-        int renderPointY =
+        int renderYellowPointY =
                 (int) Math.round(
-                        pointY
+                        yellowPointY
                 );
 
         graphics.fill(
-                renderPointX,
-                renderPointY,
-                renderPointX + POINT_WIDTH,
-                renderPointY + POINT_HEIGHT,
+                renderYellowPointX,
+                renderYellowPointY,
+                renderYellowPointX + YELLOW_POINT_WIDTH,
+                renderYellowPointY + YELLOW_POINT_HEIGHT,
                 0xFFFFFF00
+        );
+
+        /* 초록 포인트 */
+
+        double interpolatedGreenPointX =
+                Mth.lerp(
+                        partialTick,
+                        previousGreenPointX,
+                        greenPointX
+                );
+
+        int renderGreenPointX =
+                (int) Math.round(
+                        interpolatedGreenPointX
+                );
+
+        int renderGreenPointY =
+                (int) Math.round(
+                        greenPointY
+                );
+
+        graphics.fill(
+                renderGreenPointX,
+                renderGreenPointY,
+                renderGreenPointX + GREEN_POINT_WIDTH,
+                renderGreenPointY + GREEN_POINT_HEIGHT,
+                0xFF00FF00
         );
 
         /*
@@ -356,7 +478,157 @@ public class FlightScreen extends Screen {
                 0xFFFFFFFF
         );
     }
+        /*
+     * =========================
+     * 빨간 통로 렌더링
+     * =========================
+     */
 
+    private void drawCorridor(
+            GuiGraphics graphics,
+            float partialTick
+    ) {
+
+        double renderedScroll =
+                Mth.lerp(
+                        partialTick,
+                        previousCorridorScroll,
+                        corridorScroll
+                );
+
+        for (int x = 0; x < this.width; x += 2) {
+
+            double worldX =
+                    renderedScroll + x;
+
+            double centerY =
+                    getCorridorCenterY(
+                            worldX
+                    );
+
+            int topY =
+                    (int) Math.round(
+                            centerY
+                                    - CORRIDOR_HALF_HEIGHT
+                    );
+
+            int bottomY =
+                    (int) Math.round(
+                            centerY
+                                    + CORRIDOR_HALF_HEIGHT
+                    );
+
+            /*
+             * 위쪽 빨간선
+             */
+
+            graphics.fill(
+                    x,
+                    topY,
+                    x + 2,
+                    topY + CORRIDOR_LINE_THICKNESS,
+                    0xFFFF3030
+            );
+
+            /*
+             * 아래쪽 빨간선
+             */
+
+            graphics.fill(
+                    x,
+                    bottomY,
+                    x + 2,
+                    bottomY + CORRIDOR_LINE_THICKNESS,
+                    0xFFFF3030
+            );
+        }
+    }
+
+    /*
+     * =========================
+     * 빨간 통로 중심선
+     * =========================
+     */
+
+    private double getCorridorCenterY(
+            double worldX
+    ) {
+
+        /*
+         * 반복되는 하나의 통로 패턴
+         */
+
+        double patternLength =
+                1080.0;
+
+        double localX =
+                worldX % patternLength;
+
+        if (localX < 0.0) {
+            localX += patternLength;
+        }
+
+        double center =
+                this.height / 2.0;
+
+        /*
+         * 1구간
+         * 직선
+         */
+
+        if (localX < 240.0) {
+
+            return center;
+        }
+
+        /*
+         * 2구간
+         * 아래쪽으로 경사
+         */
+
+        if (localX < 420.0) {
+
+            double progress =
+                    (localX - 240.0)
+                            / 180.0;
+
+            return center
+                    + 55.0 * progress;
+        }
+
+        /*
+         * 3구간
+         * 아래쪽 직선
+         */
+
+        if (localX < 660.0) {
+
+            return center + 55.0;
+        }
+
+        /*
+         * 4구간
+         * 다시 중앙으로 경사
+         */
+
+        if (localX < 840.0) {
+
+            double progress =
+                    (localX - 660.0)
+                            / 180.0;
+
+            return center
+                    + 55.0
+                    - 55.0 * progress;
+        }
+
+        /*
+         * 5구간
+         * 중앙 직선
+         */
+
+        return center;
+    }
     @Override
     public boolean isPauseScreen() {
         return false;
