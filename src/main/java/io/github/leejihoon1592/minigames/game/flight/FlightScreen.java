@@ -123,6 +123,8 @@ public class FlightScreen extends Screen {
 
         /* 노란 포인트 */
 
+        this.yellowPointActive = true;
+
         this.yellowPointX =
                 this.width + YELLOW_POINT_WIDTH;
 
@@ -136,6 +138,8 @@ public class FlightScreen extends Screen {
                 );
 
         /* 초록 포인트 */
+
+        this.greenPointActive = true;
 
         this.greenPointX =
                 this.yellowPointX
@@ -248,6 +252,7 @@ public class FlightScreen extends Screen {
                     0.0;
 
         }
+
         /*
          * 노란 포인트 스크롤
          */
@@ -260,11 +265,43 @@ public class FlightScreen extends Screen {
         yellowPointX -=
                 POINT_SCROLL_SPEED;
 
+        /*
+         * =========================
+         * 노란 포인트 충돌 판정
+         * =========================
+         *
+         * 노란 포인트가 활성화되어 있을 때
+         * 흰색 실과 겹치는지 확인한다.
+         *
+         * 겹쳤다면 비활성화하여
+         * 화면에서 사라지게 한다.
+         */
+
+        if (yellowPointActive
+                && PLAYER_X_OFFSET < yellowPointX + YELLOW_POINT_WIDTH
+                && PLAYER_X_OFFSET + THREAD_WIDTH > yellowPointX
+                && threadY < yellowPointY + YELLOW_POINT_HEIGHT
+                && threadY + THREAD_HEIGHT > yellowPointY) {
+
+            yellowPointActive = false;
+        }
+
+        /*
+         * =========================
+         * 노란 포인트 재생성
+         * =========================
+         *
+         * 화면 왼쪽으로 완전히 벗어나면
+         * 오른쪽에 새로운 포인트를 생성한다.
+         *
+         * 새로운 포인트는 다시 활성화된다.
+         */
+
         if (yellowPointX < -YELLOW_POINT_WIDTH) {
 
             /*
-             * 노란 포인트는
-             * 초록 포인트 뒤에서 최소 간격을 확보한다.
+             * 초록 포인트와
+             * 최소 간격을 확보한다.
              */
 
             yellowPointX =
@@ -277,11 +314,14 @@ public class FlightScreen extends Screen {
 
             previousYellowPointX =
                     yellowPointX;
+
             yellowPointY =
                     getRandomPointY(
                             yellowPointX,
                             YELLOW_POINT_HEIGHT
                     );
+
+            yellowPointActive = true;
         }
 
         /* 초록 포인트 */
@@ -421,13 +461,24 @@ public class FlightScreen extends Screen {
                         yellowPointY
                 );
 
-        graphics.fill(
-                renderYellowPointX,
-                renderYellowPointY,
-                renderYellowPointX + YELLOW_POINT_WIDTH,
-                renderYellowPointY + YELLOW_POINT_HEIGHT,
-                0xFFFFFF00
-        );
+        /*
+         * 노란 포인트가 활성화된 경우에만
+         * 화면에 표시한다.
+         *
+         * 획득하여 비활성화되면
+         * 화면에서 사라진다.
+         */
+
+        if (yellowPointActive) {
+
+            graphics.fill(
+                    renderYellowPointX,
+                    renderYellowPointY,
+                    renderYellowPointX + YELLOW_POINT_WIDTH,
+                    renderYellowPointY + YELLOW_POINT_HEIGHT,
+                    0xFFFFFF00
+            );
+        }
 
         /* 초록 포인트 */
 
@@ -448,13 +499,24 @@ public class FlightScreen extends Screen {
                         greenPointY
                 );
 
-        graphics.fill(
-                renderGreenPointX,
-                renderGreenPointY,
-                renderGreenPointX + GREEN_POINT_WIDTH,
-                renderGreenPointY + GREEN_POINT_HEIGHT,
-                0xFF00FF00
-        );
+        /*
+         * 초록 포인트가 활성화된 경우에만
+         * 화면에 표시한다.
+         *
+         * 획득하여 비활성화되면
+         * 화면에서 사라진다.
+         */
+
+        if (greenPointActive) {
+
+            graphics.fill(
+                    renderGreenPointX,
+                    renderGreenPointY,
+                    renderGreenPointX + GREEN_POINT_WIDTH,
+                    renderGreenPointY + GREEN_POINT_HEIGHT,
+                    0xFF00FF00
+            );
+        }
 
         /*
          * =========================
