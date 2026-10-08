@@ -91,12 +91,14 @@ public class FlightScreen extends Screen {
     private double yellowPointX;
     private double previousYellowPointX;
     private double yellowPointY;
+    private boolean yellowPointActive;
 
     /* 초록 포인트 */
 
     private double greenPointX;
     private double previousGreenPointX;
     private double greenPointY;
+    private boolean greenPointActive;
 
     /* 빨간 통로 */
 
