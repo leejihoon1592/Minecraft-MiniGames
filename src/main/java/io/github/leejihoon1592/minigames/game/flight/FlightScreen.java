@@ -105,6 +105,20 @@ public class FlightScreen extends Screen {
     private double corridorScroll;
     private double previousCorridorScroll;
 
+    /*
+     * =========================
+     * Flight 게임 점수 관리
+     * =========================
+     *
+     * FlightGame은 현재점수, 최대점수,
+     * 보너스 점수, MISS 횟수를 관리한다.
+     *
+     * FlightScreen은 실제 게임 화면과
+     * 포인트 획득 판정을 담당한다.
+     */
+
+    private final FlightGame flightGame = new FlightGame();
+
     public FlightScreen() {
         super(Component.literal("Flight Game"));
     }
@@ -283,7 +297,26 @@ public class FlightScreen extends Screen {
                 && threadY < yellowPointY + YELLOW_POINT_HEIGHT
                 && threadY + THREAD_HEIGHT > yellowPointY) {
 
+            /*
+             * 노란 포인트 획득 처리
+             *
+             * 포인트를 비활성화하여
+             * 화면에서 사라지게 한다.
+             */
             yellowPointActive = false;
+
+            /*
+             * 노란 포인트 보너스 적용
+             *
+             * 현재점수 +100
+             * 최대점수 +100
+             *
+             * 최대점수는 2000을 넘지 않는다.
+             *
+             * 실제 점수 계산은
+             * FlightGame에서 처리한다.
+             */
+            flightGame.collectYellowPoint();
         }
 
         /*
@@ -332,11 +365,65 @@ public class FlightScreen extends Screen {
         greenPointX -=
                 POINT_SCROLL_SPEED;
 
+        /*
+         * =========================
+         * 초록 포인트 충돌 판정
+         * =========================
+         *
+         * 초록 포인트가 활성화되어 있을 때
+         * 흰색 실과 겹치는지 확인한다.
+         *
+         * 겹쳤다면 비활성화하여
+         * 화면에서 사라지게 한다.
+         */
+
+        if (greenPointActive
+                && PLAYER_X_OFFSET < greenPointX + GREEN_POINT_WIDTH
+                && PLAYER_X_OFFSET + THREAD_WIDTH > greenPointX
+                && threadY < greenPointY + GREEN_POINT_HEIGHT
+                && threadY + THREAD_HEIGHT > greenPointY) {
+
+            /*
+             * =========================
+             * 초록 포인트 획득 처리
+             * =========================
+             *
+             * 흰색 실이 초록 포인트에 닿으면
+             * 포인트를 비활성화하여 제거한다.
+             */
+            greenPointActive = false;
+
+            /*
+             * =========================
+             * 초록 포인트 보너스 적용
+             * =========================
+             *
+             * 현재점수 +200
+             * 최대점수 +200
+             *
+             * 최대점수는 2000을 넘지 않는다.
+             *
+             * 점수 계산은 FlightGame에서 처리한다.
+             */
+            flightGame.collectGreenPoint();
+        }
+
+        /*
+         * =========================
+         * 초록 포인트 재생성
+         * =========================
+         *
+         * 화면 왼쪽으로 완전히 벗어나면
+         * 오른쪽에 새로운 포인트를 생성한다.
+         *
+         * 새로운 포인트는 다시 활성화된다.
+         */
+
         if (greenPointX < -GREEN_POINT_WIDTH) {
 
             /*
-             * 초록 포인트는
-             * 노란 포인트 뒤에서 최소 간격을 확보한다.
+             * 노란 포인트와
+             * 최소 간격을 확보한다.
              */
 
             greenPointX =
@@ -355,7 +442,10 @@ public class FlightScreen extends Screen {
                             greenPointX,
                             GREEN_POINT_HEIGHT
                     );
+
+            greenPointActive = true;
         }
+
         /*
          * =========================
          * 빨간 통로 스크롤
@@ -572,17 +662,17 @@ public class FlightScreen extends Screen {
 
         graphics.drawString(
                 this.font,
-                "Velocity : "
-                        + String.format(
-                        "%.2f",
-                        velocityY
-                ),
+                "Score : "
+                        + flightGame.getCurrentScore()
+                        + " / "
+                        + flightGame.getMaxScore(),
                 10,
-                22,
+                34,
                 0xFFFFFFFF
         );
     }
-        /*
+
+    /*
      * =========================
      * 빨간 통로 렌더링
      * =========================
