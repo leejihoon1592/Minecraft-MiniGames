@@ -119,6 +119,28 @@ public class FlightScreen extends Screen {
 
     private final FlightGame flightGame = new FlightGame();
 
+    /*
+     * =========================
+     * 보너스 문구 표시 관리
+     * =========================
+     *
+     * 노란 포인트 획득:
+     * 보너스 +10%!
+     *
+     * 초록 포인트 획득:
+     * 보너스 +20%!
+     *
+     * bonusMessage:
+     * 화면에 출력할 문구를 저장한다.
+     *
+     * bonusMessageTicks:
+     * 문구가 화면에 남아 있을 시간을 관리한다.
+     * 20Tick = 약 1초
+     */
+
+    private String bonusMessage = "";
+    private int bonusMessageTicks = 0;
+
     public FlightScreen() {
         super(Component.literal("Flight Game"));
     }
@@ -317,6 +339,21 @@ public class FlightScreen extends Screen {
              * FlightGame에서 처리한다.
              */
             flightGame.collectYellowPoint();
+
+            /*
+             * =========================
+             * 노란 포인트 보너스 문구
+             * =========================
+             *
+             * 노란 포인트를 획득하면
+             * 보너스 문구를 저장한다.
+             *
+             * 20Tick 동안 표시하며,
+             * 실제 화면 출력은 render()에서 처리한다.
+             */
+
+            bonusMessage = "보너스 +10%!";
+            bonusMessageTicks = 20;
         }
 
         /*
@@ -406,6 +443,24 @@ public class FlightScreen extends Screen {
              * 점수 계산은 FlightGame에서 처리한다.
              */
             flightGame.collectGreenPoint();
+
+            /*
+             * =========================
+             * 초록 포인트 보너스 문구
+             * =========================
+             *
+             * 초록 포인트를 획득하면
+             * 보너스 문구를 저장한다.
+             *
+             * 20Tick 동안 표시하며,
+             * 실제 화면 출력은 render()에서 처리한다.
+             *
+             * 다른 보너스 문구가 표시 중이라면
+             * 새로운 문구로 교체하고 시간을 초기화한다.
+             */
+
+            bonusMessage = "보너스 +20%!";
+            bonusMessageTicks = 20;
         }
 
         /*
@@ -457,7 +512,35 @@ public class FlightScreen extends Screen {
 
         corridorScroll +=
                 POINT_SCROLL_SPEED;
+
+        /*
+         * =========================
+         * 보너스 문구 표시 시간 관리
+         * =========================
+         *
+         * 노란색 또는 초록색 포인트를
+         * 획득하면 표시 시간이 20Tick으로 설정된다.
+         *
+         * 매 Tick마다 남은 시간을 1씩 줄인다.
+         *
+         * 남은 시간이 0이 되면
+         * 보너스 문구를 삭제한다.
+         *
+         * 실제 문구 출력은 render()에서 처리한다.
+         */
+
+        if (bonusMessageTicks > 0) {
+
+            bonusMessageTicks--;
+
+            if (bonusMessageTicks == 0) {
+
+                bonusMessage = "";
+            }
+        }
     }
+
+
 
     @Override
     public void render(
@@ -670,6 +753,46 @@ public class FlightScreen extends Screen {
                 34,
                 0xFFFFFFFF
         );
+
+        /*
+         * =========================
+         * 보너스 문구 화면 출력
+         * =========================
+         *
+         * 포인트를 획득하면 저장된
+         * 보너스 문구를 화면에 출력한다.
+         *
+         * 남은 표시 시간이 0보다 클 때만
+         * 문구를 표시한다.
+         *
+         * 노란 포인트 = 노란색 문구
+         * 초록 포인트 = 초록색 문구
+         *
+         * 문구는 화면 중앙 위쪽에
+         * 가로 가운데 정렬하여 표시한다.
+         */
+
+        if (bonusMessageTicks > 0) {
+
+            int messageColor =
+                    bonusMessage.contains("10%")
+                            ? 0xFFFFFF00
+                            : 0xFF00FF00;
+
+            int messageX =
+                    (this.width - this.font.width(bonusMessage)) / 2;
+
+            int messageY =
+                    this.height / 2 - 75;
+
+            graphics.drawString(
+                    this.font,
+                    bonusMessage,
+                    messageX,
+                    messageY,
+                    messageColor
+            );
+        }
     }
 
     /*
