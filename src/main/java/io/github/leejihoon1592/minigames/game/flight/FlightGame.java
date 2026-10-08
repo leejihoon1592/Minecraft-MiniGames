@@ -11,21 +11,172 @@ public class FlightGame {
     private static final int BASE_MAX_SCORE = 1000;
     private static final int MAX_SCORE_LIMIT = 2000;
 
+
     /*
      * =========================
-     * 점수
+     * 최종 점수 관리
      * =========================
+     *
+     * currentScore:
+     * 기존 점수 저장 공간.
+     *
+     * maxScore:
+     * MISS 패널티가 반영되는 점수.
+     *
+     * missCount:
+     * MISS 발생 횟수.
      */
 
-    private int currentScore;
-    private int maxScore;
+    /*
+     * =========================
+     * MISS 횟수
+     * =========================
+     *
+     * 실제 MISS 발생 횟수를 기록한다.
+     *
+     * MISS가 3회 이상 발생해도
+     * 점수 패널티는 최대 -200점이다.
+     */
+
     private int missCount;
+
+    /*
+     * =========================
+     * 이동거리 점수
+     * =========================
+     *
+     * distanceScore:
+     * 정상 비행으로 획득한 점수만 저장한다.
+     *
+     * 노란색과 초록색 포인트로
+     * 획득한 보너스 점수는 포함하지 않는다.
+     *
+     * 이후 클리어 조건을 판단하는
+     * 기준으로 사용할 예정이다.
+     */
+
+    private int distanceScore;
+
+    /*
+     * =========================
+     * 이동거리 클리어 기준 점수
+     * =========================
+     *
+     * clearScore:
+     * 게임을 클리어하기 위해
+     * 필요한 이동거리 점수이다.
+     *
+     * 게임 시작 시 1000점이다.
+     *
+     * MISS 발생 시 100점씩 감소하며
+     * 최대 200점까지만 감소한다.
+     *
+     * MISS 0회 = 1000점
+     * MISS 1회 = 900점
+     * MISS 2회 = 800점
+     * MISS 3회 이상 = 800점 유지
+     *
+     * MISS 횟수에는 제한이 없다.
+     * 반복해서 MISS가 발생하더라도
+     * 게임은 종료되지 않는다.
+     *
+     * 노란색과 초록색 보너스 점수는
+     * 이동거리 클리어 조건에
+     * 영향을 주지 않는다.
+     */
+
+    private int clearScore;
+
+    /*
+     * =========================
+     * 보너스 점수
+     * =========================
+     *
+     * bonusScore:
+     * 노란색과 초록색 포인트로
+     * 획득한 점수만 별도로 저장한다.
+     *
+     * 노란색 포인트: +100점
+     * 초록색 포인트: +200점
+     *
+     * 정상 비행으로 획득하는
+     * 이동거리 점수는 포함하지 않는다.
+     *
+     * 이후 최종 결과 점수 계산에
+     * 사용할 예정이다.
+     */
+
+    private int bonusScore;
 
     public FlightGame() {
 
-        this.currentScore = 0;
-        this.maxScore = BASE_MAX_SCORE;
+            /*
+             * =========================
+             * 게임 시작 점수 초기화
+             * =========================
+             *
+             * 현재점수와 이동거리 점수는
+             * 모두 0점에서 시작한다.
+             *
+             * 최대점수는 기본 1000점이며
+             * MISS 및 보너스에 따라 변경된다.
+             */
+
+        /*
+         * =========================
+         * MISS 횟수 초기화
+         * =========================
+         *
+         * 게임 시작 시 MISS 횟수는 0회이다.
+         * 최대 점수 패널티는 -200점이다.
+         */
+
         this.missCount = 0;
+
+            /*
+             * =========================
+             * 이동거리 점수 초기화
+             * =========================
+             *
+             * 포인트 보너스와 별도로
+             * 정상 비행한 점수를 기록한다.
+             */
+
+            this.distanceScore = 0;
+
+        /*
+         * =========================
+         * 보너스 점수 초기화
+         * =========================
+         *
+         * 게임 시작 시 보너스 점수는
+         * 0점으로 설정한다.
+         *
+         * 노란색과 초록색 포인트를
+         * 획득할 때만 증가시킬 예정이다.
+         */
+
+        this.bonusScore = 0;
+
+        /*
+         * =========================
+         * 클리어 기준 점수 초기화
+         * =========================
+         *
+         * 게임 시작 시 이동거리
+         * 클리어 기준은 1000점이다.
+         *
+         * MISS 1회 발생 시 900점,
+         * MISS 2회 발생 시 800점이 된다.
+         *
+         * MISS가 추가로 발생하더라도
+         * 800점 아래로 감소하지 않는다.
+         *
+         * 실제 MISS 패널티 연결은
+         * 다음 단계에서 진행한다.
+         */
+
+        this.clearScore = BASE_MAX_SCORE;
     }
 
     /*
@@ -36,19 +187,26 @@ public class FlightGame {
 
     public void collectYellowPoint() {
 
-        this.currentScore += 100;
+        /*
+         * =========================
+         * 노란색 보너스 점수 누적
+         * =========================
+         *
+         * 노란색 포인트 획득 시
+         * bonusScore에 100점을 추가한다.
+         *
+         * 이동거리 점수와
+         * 클리어 기준 점수에는
+         * 영향을 주지 않는다.
+         *
+         * 최종점수는 getCurrentScore()에서
+         * 이동거리 점수와 합산한다.
+         *
+         * 최대점수는 getMaxScore()에서
+         * 별도로 계산한다.
+         */
 
-        this.maxScore =
-                Math.min(
-                        this.maxScore + 100,
-                        MAX_SCORE_LIMIT
-                );
-
-        if (this.currentScore > this.maxScore) {
-
-            this.currentScore =
-                    this.maxScore;
-        }
+        this.bonusScore += 100;
     }
 
     /*
@@ -59,19 +217,26 @@ public class FlightGame {
 
     public void collectGreenPoint() {
 
-        this.currentScore += 200;
+        /*
+         * =========================
+         * 초록색 보너스 점수 누적
+         * =========================
+         *
+         * 초록색 포인트 획득 시
+         * bonusScore에 200점을 추가한다.
+         *
+         * 이동거리 점수와
+         * 클리어 기준 점수에는
+         * 영향을 주지 않는다.
+         *
+         * 최종점수는 getCurrentScore()에서
+         * 이동거리 점수와 합산한다.
+         *
+         * 최대점수는 getMaxScore()에서
+         * 별도로 계산한다.
+         */
 
-        this.maxScore =
-                Math.min(
-                        this.maxScore + 200,
-                        MAX_SCORE_LIMIT
-                );
-
-        if (this.currentScore > this.maxScore) {
-
-            this.currentScore =
-                    this.maxScore;
-        }
+        this.bonusScore += 200;
     }
 
     /*
@@ -82,20 +247,76 @@ public class FlightGame {
 
     public void applyMiss() {
 
+        /*
+         * =========================
+         * MISS 횟수 기록
+         * =========================
+         *
+         * MISS가 발생할 때마다
+         * 실제 MISS 횟수를 기록한다.
+         *
+         * MISS 횟수에는 제한이 없으며
+         * 게임 실패 조건도 없다.
+         */
+
         this.missCount++;
 
-        this.maxScore -= 100;
+        /*
+         * =========================
+         * 클리어 기준 점수 감소
+         * =========================
+         *
+         * 기본 클리어 기준: 1000점
+         *
+         * MISS 0회: 1000점
+         * MISS 1회: 900점
+         * MISS 2회: 800점
+         * MISS 3회 이상: 800점 유지
+         *
+         * 패널티는 최대 -200점이다.
+         *
+         * 이동거리 점수와 보너스 점수는
+         * MISS 발생 시 직접 차감하지 않는다.
+         */
 
-        if (this.maxScore < 0) {
+        /*
+         * =========================
+         * MISS 발생 시 클리어 기준 변경
+         * =========================
+         *
+         * MISS 0회: 1000점
+         * MISS 1회: 900점
+         * MISS 2회 이상: 800점
+         *
+         * 세 번째 MISS부터는
+         * 추가 점수 패널티가 없다.
+         */
 
-            this.maxScore = 0;
-        }
+        this.clearScore =
+                Math.max(
+                        BASE_MAX_SCORE - 200,
+                        BASE_MAX_SCORE
+                                - Math.min(this.missCount, 2) * 100
+                );
 
-        if (this.currentScore > this.maxScore) {
+        /*
+         * =========================
+         * 이동거리 점수 상한 보정
+         * =========================
+         *
+         * MISS로 클리어 기준이 낮아졌을 때
+         * 이미 누적한 이동거리 점수가
+         * 새로운 기준보다 높다면
+         * 새로운 기준에 맞춰 조정한다.
+         *
+         * 보너스 점수는 변경하지 않는다.
+         */
 
-            this.currentScore =
-                    this.maxScore;
-        }
+        this.distanceScore =
+                Math.min(
+                        this.distanceScore,
+                        this.clearScore
+                );
     }
 
     /*
@@ -104,14 +325,87 @@ public class FlightGame {
      * =========================
      */
 
+    /*
+     * =========================
+     * 현재점수 계산 및 조회
+     * =========================
+     *
+     * 이동거리 점수와 보너스 점수를
+     * 합산하여 현재점수를 계산한다.
+     *
+     * distanceScore:
+     * 정상 비행으로 획득한 점수.
+     *
+     * bonusScore:
+     * 노란색과 초록색 포인트로
+     * 획득한 보너스 점수.
+     *
+     * 현재 단계에서는 기존 최대점수
+     * 제한을 그대로 적용한다.
+     *
+     * 최종 점수 시스템 완성 시
+     * 최대점수 계산도 별도로 정리한다.
+     */
+
+    /*
+     * =========================
+     * 현재점수 계산 및 조회
+     * =========================
+     *
+     * 이동거리 점수와 보너스 점수를
+     * 합산하여 현재점수를 계산한다.
+     *
+     * 기존 maxScore 변수 대신
+     * 새롭게 계산한 최대점수를 사용한다.
+     *
+     * MISS 패널티는 getMaxScore()에서
+     * 최대 200점까지만 반영하므로
+     * 여기서는 별도로 차감하지 않는다.
+     *
+     * 현재점수는 최대점수를
+     * 초과하지 않도록 제한한다.
+     */
+
     public int getCurrentScore() {
 
-        return this.currentScore;
+        return Math.min(
+                this.distanceScore + this.bonusScore,
+                this.getMaxScore()
+        );
     }
+
+    /*
+     * =========================
+     * 최종 최대점수 조회
+     * =========================
+     *
+     * 기본 최대점수는 1000점이다.
+     *
+     * 노랑·초록 포인트 획득에 따라
+     * 최대점수가 증가한다.
+     *
+     * MISS 패널티는 최대 200점까지만
+     * 적용한다.
+     *
+     * 최종 최대점수의 상한은
+     * 2000점으로 제한한다.
+     */
 
     public int getMaxScore() {
 
-        return this.maxScore;
+        int bonusLimit =
+                Math.min(
+                        bonusScore,
+                        MAX_SCORE_LIMIT - BASE_MAX_SCORE
+                );
+
+        int missPenalty =
+                Math.min(missCount, 2) * 100;
+
+        return Math.min(
+                MAX_SCORE_LIMIT,
+                BASE_MAX_SCORE + bonusLimit - missPenalty
+        );
     }
 
     public int getMissCount() {
@@ -121,18 +415,94 @@ public class FlightGame {
 
     /*
      * =========================
+     * 이동거리 점수 조회
+     * =========================
+     *
+     * 정상 비행으로 획득한
+     * 이동거리 점수만 반환한다.
+     *
+     * 노랑·초록 보너스 점수는
+     * 포함하지 않는다.
+     */
+
+    public int getDistanceScore() {
+
+        return this.distanceScore;
+    }
+
+    /*
+     * =========================
+     * 보너스 점수 조회
+     * =========================
+     *
+     * 노란색과 초록색 포인트로
+     * 획득한 보너스 점수만 반환한다.
+     */
+
+    public int getBonusScore() {
+
+        return this.bonusScore;
+    }
+
+    /*
+     * =========================
+     * 클리어 기준 점수 조회
+     * =========================
+     *
+     * MISS 패널티가 반영된
+     * 이동거리 클리어 기준을 반환한다.
+     *
+     * MISS 0회: 1000점
+     * MISS 1회: 900점
+     * MISS 2회 이상: 800점
+     */
+
+    public int getClearScore() {
+
+        return this.clearScore;
+    }
+
+    /*
+     * =========================
      * 기본 진행 점수
      * =========================
+     *
+     * 정상 비행 시 1Tick당 1점씩
+     * 이동거리 점수를 누적한다.
+     *
+     * distanceScore:
+     * 실제 이동거리 점수를 저장한다.
+     *
+     * currentScore:
+     * 현재 화면에 표시하는 점수이며,
+     * 보너스 점수 분리가 완료될 때까지
+     * 기존 계산 방식을 유지한다.
      */
 
     public void addProgressScore(int amount) {
 
-        this.currentScore += amount;
+        /*
+         * =========================
+         * 이동거리 점수 누적
+         * =========================
+         *
+         * 정상 비행 중 매 Tick마다
+         * 전달받은 점수를 추가한다.
+         *
+         * 이동거리 점수는
+         * 클리어 기준을 초과하지 않는다.
+         *
+         * MISS 0회: 최대 1000점
+         * MISS 1회: 최대 900점
+         * MISS 2회 이상: 최대 800점
+         *
+         * 보너스 점수는 별도로 계산한다.
+         */
 
-        if (this.currentScore > this.maxScore) {
-
-            this.currentScore =
-                    this.maxScore;
-        }
+        this.distanceScore =
+                Math.min(
+                        this.distanceScore + amount,
+                        this.clearScore
+                );
     }
 }
