@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import io.github.leejihoon1592.minigames.MiniGames;
 import io.github.leejihoon1592.minigames.game.path.PathScreen;
 import io.github.leejihoon1592.minigames.game.timing.TimingScreen;
+import io.github.leejihoon1592.minigames.game.flight.FlightScreen;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
@@ -12,6 +13,7 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
+
 
 public final class ClientEvents {
 
@@ -37,6 +39,12 @@ public final class ClientEvents {
             GLFW.GLFW_KEY_X,
             "key.categories.minigames"
     );
+    public static final KeyMapping OPEN_FLIGHT_GAME = new KeyMapping(
+            "key.minigames.open_flight_game",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_C,
+            "key.categories.minigames"
+    );
 
     /*
      * =========================
@@ -60,6 +68,7 @@ public final class ClientEvents {
         ) {
             event.register(OPEN_TIMING_GAME);
             event.register(OPEN_PATH_GAME);
+            event.register(OPEN_FLIGHT_GAME);
         }
     }
 
@@ -127,6 +136,16 @@ public final class ClientEvents {
                                     }
                                 }
                         )
+                );
+            }
+            /*
+             * C
+             * Flight Game
+             */
+            while (OPEN_FLIGHT_GAME.consumeClick()) {
+
+                minecraft.setScreen(
+                        new FlightScreen()
                 );
             }
         }
