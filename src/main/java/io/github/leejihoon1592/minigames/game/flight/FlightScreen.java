@@ -83,6 +83,20 @@ public class FlightScreen extends Screen {
 
     /*
      * =========================
+     * 실의 이동 경로 관리
+     * =========================
+     *
+     * FlightPath는 빨간 통로 계산과
+     * 실이 지나온 위치 기록을 담당한다.
+     *
+     * 각 게임 화면마다 독립된
+     * 이동 경로를 사용한다.
+     */
+
+    private final FlightPath flightPath = new FlightPath();
+
+    /*
+     * =========================
      * 게임 시작 카운트다운
      * =========================
      *
@@ -229,6 +243,17 @@ public class FlightScreen extends Screen {
 
         this.previousCorridorScroll =
                 0.0;
+
+        /*
+         * =========================
+         * 게임 시작 시 잔상 초기화
+         * =========================
+         *
+         * 새로운 게임을 시작할 때
+         * 이전 경로 기록이 남지 않도록 한다.
+         */
+
+        this.flightPath.clearTrail();
 
     }
 
@@ -656,8 +681,32 @@ public class FlightScreen extends Screen {
         previousCorridorScroll =
                 corridorScroll;
 
+        previousCorridorScroll =
+                corridorScroll;
+
         corridorScroll +=
                 POINT_SCROLL_SPEED;
+
+        /*
+         * =========================
+         * 실의 이동 경로 기록
+         * =========================
+         *
+         * 화면에서 실의 X 좌표는 고정이지만
+         * 배경이 이동하므로 월드 좌표를 기록한다.
+         *
+         * 실의 중심 Y 좌표를 사용해
+         * 실제 지나온 경로를 저장한다.
+         *
+         * 카운트다운 중에는 이 코드까지
+         * 도달하지 않으므로 기록하지 않는다.
+         */
+
+        flightPath.recordTrailPoint(
+                corridorScroll + PLAYER_X_OFFSET
+                        + THREAD_WIDTH / 2.0,
+                threadY + THREAD_HEIGHT / 2.0
+        );
 
         /*
          * =========================
@@ -1145,6 +1194,23 @@ public class FlightScreen extends Screen {
 
         /*
          * =========================
+         * 실의 이동 잔상 표시
+         * =========================
+         *
+         * 빨간 통로 위에 실이 지나온
+         * 이동 경로를 표시한다.
+         *
+         * 현재 실보다 먼저 그리므로
+         * 흰색 실은 항상 잔상 위에 표시된다.
+         */
+
+        drawThreadTrail(
+                graphics,
+                partialTick
+        );
+
+        /*
+         * =========================
          * 노란 포인트
          * =========================
          */
@@ -1452,6 +1518,182 @@ public class FlightScreen extends Screen {
      * 빨간 통로 렌더링
      * =========================
      */
+
+    /*
+     * =========================
+     * 실의 이동 잔상 렌더링
+     * =========================
+     *
+     * FlightPath에 기록된 월드 좌표를
+     * 현재 스크롤 위치에 맞춰 화면에 출력한다.
+     *
+     * 실이 고정된 X 좌표에서 움직이더라도
+     * 지나온 경로는 왼쪽으로 흘러간다.
+     *
+     * 점 사이의 공간을 보간하여
+     * 스크롤 속도가 빨라도 잔상이
+     * 끊어지지 않도록 그린다.
+     */
+
+    private void drawThreadTrail(
+            GuiGraphics graphics,
+            float partialTick
+    ) {
+
+        /*
+         * =========================
+         * 현재 스크롤 위치 보간
+         * =========================
+         */
+
+        double renderedScroll =
+                Mth.lerp(
+                        partialTick,
+                        previousCorridorScroll,
+                        corridorScroll
+                );
+
+        /*
+         * =========================
+         * 이전 잔상 좌표 관리
+         * =========================
+         */
+
+        FlightPath.TrailPoint previousPoint = null;
+
+        /*
+         * =========================
+         * 저장된 이동 경로 순회
+         * =========================
+         */
+
+        for (FlightPath.TrailPoint point
+                : flightPath.getTrailPoints()) {
+
+            /*
+             * 현재 기록의 화면 좌표 계산
+             */
+
+            double currentX =
+                    point.getWorldX() - renderedScroll;
+
+            double currentY =
+                    point.getY();
+
+            /*
+             * 첫 번째 기록은 연결할
+             * 이전 좌표가 없으므로 건너뛴다.
+             */
+
+            if (previousPoint == null) {
+
+                previousPoint = point;
+                continue;
+            }
+
+            /*
+             * 이전 기록의 화면 좌표 계산
+             */
+
+            double previousX =
+                    previousPoint.getWorldX() - renderedScroll;
+
+            double previousY =
+                    previousPoint.getY();
+
+            /*
+             * 두 기록 사이의 이동 거리
+             */
+
+            double differenceX =
+                    currentX - previousX;
+
+            double differenceY =
+                    currentY - previousY;
+
+            /*
+             * =========================
+             * 좌표 사이 보간
+             * =========================
+             *
+             * X 또는 Y 이동량 중
+             * 더 큰 값을 기준으로
+             * 1픽셀 간격의 점을 생성한다.
+             *
+             * 빠른 이동 중에도
+             * 경로가 끊어지지 않게 한다.
+             */
+
+            int steps =
+                    Math.max(
+                            1,
+                            (int) Math.ceil(
+                                    Math.max(
+                                            Math.abs(differenceX),
+                                            Math.abs(differenceY)
+                                    )
+                            )
+                    );
+
+            for (int step = 0; step <= steps; step++) {
+
+                double progress =
+                        (double) step / steps;
+
+                double x =
+                        previousX
+                                + differenceX * progress;
+
+                double y =
+                        previousY
+                                + differenceY * progress;
+
+                int renderX =
+                        (int) Math.round(x);
+
+                int renderY =
+                        (int) Math.round(y);
+
+                /*
+                 * 화면 밖에 있는 기록은
+                 * 실제 렌더링을 생략한다.
+                 */
+
+                if (renderX < 0
+                        || renderX >= this.width
+                        || renderY < 0
+                        || renderY >= this.height) {
+                    continue;
+                }
+
+                /*
+                 * =========================
+                 * 잔상 픽셀 출력
+                 * =========================
+                 *
+                 * 현재 실과 구분되도록
+                 * 옅은 회백색을 사용한다.
+                 *
+                 * 잔상 두께는 2픽셀이다.
+                 */
+
+                graphics.fill(
+                        renderX,
+                        renderY,
+                        Math.min(renderX + 4, this.width),
+                        Math.min(renderY + 4, this.height),
+                        0xFFAAAAAA
+                );
+            }
+
+            /*
+             * 다음 연결 구간을 위해
+             * 현재 좌표를 저장한다.
+             */
+
+            previousPoint = point;
+        }
+    }
 
     private void drawCorridor(
             GuiGraphics graphics,

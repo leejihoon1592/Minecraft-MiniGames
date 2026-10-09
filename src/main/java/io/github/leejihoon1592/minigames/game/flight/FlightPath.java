@@ -31,7 +31,19 @@ public final class FlightPath {
 
     private static final double PATTERN_LENGTH = 1080.0;
 
-    private FlightPath() {
+    /*
+     * =========================
+     * 실의 이동 경로 관리 객체 생성
+     * =========================
+     *
+     * 각 헬기게임 화면은
+     * 독립된 이동 경로 기록을 가진다.
+     *
+     * 게임을 새로 시작하면
+     * 이전 게임의 잔상이 남지 않는다.
+     */
+
+    public FlightPath() {
     }
 
     /*
