@@ -40,27 +40,27 @@ public class FlightScreen extends Screen {
      * 노란 포인트 크기
      */
 
-    private static final int YELLOW_POINT_WIDTH = 6;
-    private static final int YELLOW_POINT_HEIGHT = 20;
+    private static final int YELLOW_POINT_WIDTH = 4;
+    private static final int YELLOW_POINT_HEIGHT = 14;
 
     /*
      * 초록 포인트 크기
      */
 
-    private static final int GREEN_POINT_WIDTH = 12;
-    private static final int GREEN_POINT_HEIGHT = 12;
+    private static final int GREEN_POINT_WIDTH = 9;
+    private static final int GREEN_POINT_HEIGHT = 9;
 
     /*
      * 포인트 이동 속도
      */
 
-    private static final double POINT_SCROLL_SPEED = 4.0;
+    private static final double POINT_SCROLL_SPEED = 5.0;
 
     /*
      * 포인트 최소 간격
      */
 
-    private static final double MIN_POINT_GAP = 160.0;
+    private static final double MIN_POINT_GAP = 240.0;
 
     /*
      * =========================
