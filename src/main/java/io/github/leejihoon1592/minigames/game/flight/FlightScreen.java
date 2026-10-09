@@ -137,6 +137,36 @@ public class FlightScreen extends Screen {
 
     /*
      * =========================
+     * 게임 시작 카운트다운
+     * =========================
+     *
+     * 20Tick = 1초
+     * 100Tick = 5초
+     *
+     * 카운트다운이 끝나기 전에는
+     * 게임의 모든 움직임과 점수 계산을 중지한다.
+     */
+
+    private static final int START_COUNTDOWN_TICKS = 100;
+
+    private int countdownTicks = START_COUNTDOWN_TICKS;
+
+    /*
+     * =========================
+     * 게임 클리어 상태
+     * =========================
+     *
+     * 이동거리 점수가 클리어 기준에
+     * 도달하면 true로 변경한다.
+     *
+     * true 상태에서는 게임 진행을
+     * 정지하고 결과 화면만 표시한다.
+     */
+
+    private boolean gameFinished = false;
+
+    /*
+     * =========================
      * 보너스 문구 표시 관리
      * =========================
      *
@@ -243,6 +273,41 @@ public class FlightScreen extends Screen {
 
     @Override
     public void tick() {
+
+        /*
+         * =========================
+         * 클리어 후 게임 진행 정지
+         * =========================
+         *
+         * 클리어 상태에서는 물리 계산,
+         * 점수 증가, 포인트 이동,
+         * MISS 판정을 더 이상 실행하지 않는다.
+         */
+
+        if (gameFinished) {
+            return;
+        }
+
+        /*
+         * =========================
+         * 게임 시작 전 카운트다운
+         * =========================
+         *
+         * 카운트다운 중에는 Tick마다
+         * 남은 시간을 1씩 감소시킨다.
+         *
+         * 남은 시간이 0보다 크면
+         * 나머지 게임 로직을 실행하지 않는다.
+         *
+         * 0이 되면 자동으로 게임을 시작한다.
+         */
+
+        if (countdownTicks > 0) {
+
+            countdownTicks--;
+
+            return;
+        }
 
         /*
          * 렌더 보간용
@@ -836,6 +901,28 @@ public class FlightScreen extends Screen {
                 bonusMessage = "";
             }
         }
+
+        /*
+         * =========================
+         * 이동거리 클리어 판정
+         * =========================
+         *
+         * MISS 0회: 1000점
+         * MISS 1회: 900점
+         * MISS 2회 이상: 800점
+         *
+         * 보너스 점수는 클리어 조건에
+         * 포함하지 않는다.
+         *
+         * 기준 점수에 도달하면
+         * 게임을 종료 상태로 변경한다.
+         */
+
+        if (flightGame.getDistanceScore()
+                >= flightGame.getClearScore()) {
+
+            gameFinished = true;
+        }
     }
 
 
@@ -861,6 +948,110 @@ public class FlightScreen extends Screen {
                 this.height,
                 0xFF202020
         );
+
+        /*
+         * =========================
+         * 헬기게임 결과 화면
+         * =========================
+         *
+         * 클리어 상태에서는
+         * 기존 게임 요소를 그리지 않고
+         * 최종 점수만 표시한다.
+         */
+
+        if (gameFinished) {
+
+            int centerX = this.width / 2;
+            int centerY = this.height / 2;
+
+            graphics.drawCenteredString(
+                    this.font,
+                    "FLIGHT CLEAR!",
+                    centerX,
+                    centerY - 60,
+                    0xFFFFD700
+            );
+
+            graphics.drawCenteredString(
+                    this.font,
+                    "Distance : "
+                            + flightGame.getDistanceScore(),
+                    centerX,
+                    centerY - 30,
+                    0xFFFFFFFF
+            );
+
+            graphics.drawCenteredString(
+                    this.font,
+                    "Bonus : "
+                            + flightGame.getBonusScore(),
+                    centerX,
+                    centerY - 15,
+                    0xFF55FF55
+            );
+
+            graphics.drawCenteredString(
+                    this.font,
+                    "MISS : "
+                            + flightGame.getMissCount(),
+                    centerX,
+                    centerY,
+                    0xFFFF5555
+            );
+
+            graphics.drawCenteredString(
+                    this.font,
+                    "FINAL SCORE : "
+                            + flightGame.getCurrentScore()
+                            + " / "
+                            + flightGame.getMaxScore(),
+                    centerX,
+                    centerY + 30,
+                    0xFFFFFF55
+            );
+
+            return;
+        }
+
+        /*
+         * =========================
+         * 시작 카운트다운 화면 표시
+         * =========================
+         *
+         * 남은 Tick을 초 단위로 변환한다.
+         *
+         * 100~81Tick : 5
+         * 80~61Tick  : 4
+         * 60~41Tick  : 3
+         * 40~21Tick  : 2
+         * 20~1Tick   : 1
+         *
+         * 종료되면 자동으로 게임이 진행된다.
+         */
+
+        if (countdownTicks > 0) {
+
+            int countdownSeconds =
+                    (countdownTicks + 19) / 20;
+
+            graphics.drawCenteredString(
+                    this.font,
+                    "START IN",
+                    this.width / 2,
+                    this.height / 2 - 35,
+                    0xFFFFFFFF
+            );
+
+            graphics.drawCenteredString(
+                    this.font,
+                    String.valueOf(countdownSeconds),
+                    this.width / 2,
+                    this.height / 2 - 10,
+                    0xFFFFFF55
+            );
+
+            return;
+        }
 
         /*
          * =========================

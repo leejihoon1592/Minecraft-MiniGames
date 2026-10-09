@@ -438,6 +438,25 @@ public class PathScreen extends Screen {
         }
 
         /*
+         * =========================
+         * 게임 종료 후 화면 닫기
+         * =========================
+         *
+         * 미로게임이 FINISHED 상태라면
+         * 결과 점수를 확인한 후
+         * 마우스를 한 번 더 클릭하여
+         * 마인크래프트 월드로 돌아간다.
+         *
+         * 좌클릭과 우클릭 모두 허용한다.
+         * 점수 계산에는 영향을 주지 않는다.
+         */
+
+        if (state == GameState.FINISHED) {
+            this.minecraft.setScreen(null);
+            return true;
+        }
+
+        /*
          * START 클릭
          */
 
