@@ -5,74 +5,20 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
+import static io.github.leejihoon1592.minigames.game.flight.FlightConfig.*;
 
 public class FlightScreen extends Screen {
 
     /*
      * =========================
-     * 화면 설정
+     * 화면 및 물리 설정
      * =========================
+     *
+     * 기존 설정값은 FlightConfig에서 관리한다.
+     *
+     * 이 클래스는 설정값을 직접 선언하지 않고
+     * FlightConfig에 정의된 값을 사용한다.
      */
-
-    private static final int PLAYER_X_OFFSET = 120;
-
-    /*
-     * 실 크기
-     */
-
-    private static final int THREAD_WIDTH = 6;
-    private static final int THREAD_HEIGHT = 6;
-
-    /*
-     * 비행 통로 높이
-     */
-
-    private static final int FLIGHT_AREA_HEIGHT = 210;
-
-    /*
-     * 빨간 통로
-     */
-
-    private static final int CORRIDOR_HALF_HEIGHT = 38;
-    private static final int CORRIDOR_LINE_THICKNESS = 3;
-
-    /*
-     * 노란 포인트 크기
-     */
-
-    private static final int YELLOW_POINT_WIDTH = 4;
-    private static final int YELLOW_POINT_HEIGHT = 14;
-
-    /*
-     * 초록 포인트 크기
-     */
-
-    private static final int GREEN_POINT_WIDTH = 9;
-    private static final int GREEN_POINT_HEIGHT = 9;
-
-    /*
-     * 포인트 이동 속도
-     */
-
-    private static final double POINT_SCROLL_SPEED = 5.0;
-
-    /*
-     * 포인트 최소 간격
-     */
-
-    private static final double MIN_POINT_GAP = 240.0;
-
-    /*
-     * =========================
-     * 임시 물리값
-     * =========================
-     */
-
-    private static final double GRAVITY = 0.18;
-    private static final double HOLD_FORCE = 0.35;
-
-    private static final double MAX_FALL_SPEED = 4.0;
-    private static final double MAX_RISE_SPEED = -4.0;
 
     /*
      * =========================
@@ -1569,88 +1515,28 @@ public class FlightScreen extends Screen {
 
     /*
      * =========================
-     * 빨간 통로 중심선
+     * 빨간 통로 중심선 조회
      * =========================
+     *
+     * 실제 통로 패턴 계산은
+     * FlightPath에서 담당한다.
+     *
+     * FlightScreen은 현재 화면 높이와
+     * 월드 X 좌표만 전달한다.
+     *
+     * 기존 호출부는 그대로 유지하여
+     * 통로 출력 및 충돌 판정에
+     * 영향을 주지 않도록 한다.
      */
 
     private double getCorridorCenterY(
             double worldX
     ) {
 
-        /*
-         * 반복되는 하나의 통로 패턴
-         */
-
-        double patternLength =
-                1080.0;
-
-        double localX =
-                worldX % patternLength;
-
-        if (localX < 0.0) {
-            localX += patternLength;
-        }
-
-        double center =
-                this.height / 2.0;
-
-        /*
-         * 1구간
-         * 직선
-         */
-
-        if (localX < 240.0) {
-
-            return center;
-        }
-
-        /*
-         * 2구간
-         * 아래쪽으로 경사
-         */
-
-        if (localX < 420.0) {
-
-            double progress =
-                    (localX - 240.0)
-                            / 180.0;
-
-            return center
-                    + 55.0 * progress;
-        }
-
-        /*
-         * 3구간
-         * 아래쪽 직선
-         */
-
-        if (localX < 660.0) {
-
-            return center + 55.0;
-        }
-
-        /*
-         * 4구간
-         * 다시 중앙으로 경사
-         */
-
-        if (localX < 840.0) {
-
-            double progress =
-                    (localX - 660.0)
-                            / 180.0;
-
-            return center
-                    + 55.0
-                    - 55.0 * progress;
-        }
-
-        /*
-         * 5구간
-         * 중앙 직선
-         */
-
-        return center;
+        return FlightPath.getCorridorCenterY(
+                worldX,
+                this.height
+        );
     }
 
     /*
