@@ -40,15 +40,15 @@ public class FlightScreen extends Screen {
      * 노란 포인트 크기
      */
 
-    private static final int YELLOW_POINT_WIDTH = 12;
-    private static final int YELLOW_POINT_HEIGHT = 30;
+    private static final int YELLOW_POINT_WIDTH = 6;
+    private static final int YELLOW_POINT_HEIGHT = 20;
 
     /*
      * 초록 포인트 크기
      */
 
-    private static final int GREEN_POINT_WIDTH = 22;
-    private static final int GREEN_POINT_HEIGHT = 22;
+    private static final int GREEN_POINT_WIDTH = 12;
+    private static final int GREEN_POINT_HEIGHT = 12;
 
     /*
      * 포인트 이동 속도
@@ -759,16 +759,38 @@ public class FlightScreen extends Screen {
 
         /*
          * =========================
-         * 기본 진행 점수
+         * 실제 이동거리 누적
          * =========================
          *
-         * 흰색 실 전체가 빨간 통로 안에 있으면
-         * 매 Tick마다 현재점수를 1점 증가시킨다.
+         * 게임이 진행되는 동안
+         * 매 Tick마다 실제 이동거리를 1씩 증가시킨다.
+         *
+         * MISS 상태에서도 이동거리는 증가한다.
+         *
+         * 실제 이동거리는 게임 클리어 조건에
+         * 사용되며 점수와 별도로 관리한다.
+         *
+         * MISS 0회: 목표 이동거리 1000
+         * MISS 1회: 목표 이동거리 900
+         * MISS 2회 이상: 목표 이동거리 800
+         */
+
+        flightGame.addTraveledDistance(1);
+
+        /*
+         * =========================
+         * 정상 비행 점수 누적
+         * =========================
+         *
+         * 흰색 실 전체가 빨간 통로 안에 있을 때만
+         * 매 Tick마다 정상 비행 점수를 1점 획득한다.
          *
          * 통로 밖으로 벗어난 동안에는
-         * 진행 점수를 얻지 않는다.
+         * 실제 이동거리만 증가하고
+         * 정상 비행 점수는 증가하지 않는다.
          *
-         * 현재점수는 최대점수를 넘지 않는다.
+         * 노란색과 초록색 보너스 점수는
+         * FlightGame에서 별도로 관리한다.
          */
 
         if (!threadOutsideCorridor) {
@@ -904,21 +926,29 @@ public class FlightScreen extends Screen {
 
         /*
          * =========================
-         * 이동거리 클리어 판정
+         * 실제 이동거리 클리어 판정
          * =========================
          *
-         * MISS 0회: 1000점
-         * MISS 1회: 900점
-         * MISS 2회 이상: 800점
+         * 정상 비행 점수가 아닌
+         * 실제 이동거리를 기준으로 클리어한다.
          *
-         * 보너스 점수는 클리어 조건에
-         * 포함하지 않는다.
+         * MISS 0회: 이동거리 1000
+         * MISS 1회: 이동거리 900
+         * MISS 2회 이상: 이동거리 800
          *
-         * 기준 점수에 도달하면
+         * MISS 상태에서 이동한 거리도
+         * 클리어 목표에 포함한다.
+         *
+         * 정상 비행 점수와 보너스 점수는
+         * 게임 종료 시 그대로 유지한다.
+         *
+         * 목표 이동거리에 도달하면
          * 게임을 종료 상태로 변경한다.
+         *
+         * 다음 Tick부터는 게임 진행이 정지된다.
          */
 
-        if (flightGame.getDistanceScore()
+        if (flightGame.getTraveledDistance()
                 >= flightGame.getClearScore()) {
 
             gameFinished = true;
@@ -937,17 +967,21 @@ public class FlightScreen extends Screen {
 
         /*
          * =========================
-         * 배경
+         * 마인크래프트 월드 배경 표시
          * =========================
+         *
+         * 기존의 불투명한 단색 배경을 제거한다.
+         *
+         * 마인크래프트의 기본 화면 배경 처리를
+         * 사용하여 월드가 뒤에 보이도록 한다.
+         *
+         * 미로게임 및 타이밍게임과
+         * 동일한 배경 처리 방식을 사용한다.
+         *
+         * 실제 월드 게임 진행은 일시정지하지 않는다.
          */
 
-        graphics.fill(
-                0,
-                0,
-                this.width,
-                this.height,
-                0xFF202020
-        );
+        this.renderBackground(graphics);
 
         /*
          * =========================
@@ -972,12 +1006,45 @@ public class FlightScreen extends Screen {
                     0xFFFFD700
             );
 
+            /*
+             * =========================
+             * 실제 이동거리 출력
+             * =========================
+             *
+             * MISS 상태에서 이동한 거리도
+             * 포함한 실제 이동거리를 표시한다.
+             *
+             * 오른쪽에는 클리어 목표 거리를 표시한다.
+             */
+
             graphics.drawCenteredString(
                     this.font,
                     "Distance : "
-                            + flightGame.getDistanceScore(),
+                            + flightGame.getTraveledDistance()
+                            + " / "
+                            + flightGame.getClearScore(),
                     centerX,
                     centerY - 30,
+                    0xFFFFFFFF
+            );
+
+            /*
+             * =========================
+             * 정상 비행 획득 점수 출력
+             * =========================
+             *
+             * 통로 안에서 비행하여
+             * 실제로 획득한 점수만 표시한다.
+             *
+             * 보너스 점수는 포함하지 않는다.
+             */
+
+            graphics.drawCenteredString(
+                    this.font,
+                    "Flight Score : "
+                            + flightGame.getDistanceScore(),
+                    centerX,
+                    centerY - 45,
                     0xFFFFFFFF
             );
 
@@ -1007,46 +1074,6 @@ public class FlightScreen extends Screen {
                             + flightGame.getMaxScore(),
                     centerX,
                     centerY + 30,
-                    0xFFFFFF55
-            );
-
-            return;
-        }
-
-        /*
-         * =========================
-         * 시작 카운트다운 화면 표시
-         * =========================
-         *
-         * 남은 Tick을 초 단위로 변환한다.
-         *
-         * 100~81Tick : 5
-         * 80~61Tick  : 4
-         * 60~41Tick  : 3
-         * 40~21Tick  : 2
-         * 20~1Tick   : 1
-         *
-         * 종료되면 자동으로 게임이 진행된다.
-         */
-
-        if (countdownTicks > 0) {
-
-            int countdownSeconds =
-                    (countdownTicks + 19) / 20;
-
-            graphics.drawCenteredString(
-                    this.font,
-                    "START IN",
-                    this.width / 2,
-                    this.height / 2 - 35,
-                    0xFFFFFFFF
-            );
-
-            graphics.drawCenteredString(
-                    this.font,
-                    String.valueOf(countdownSeconds),
-                    this.width / 2,
-                    this.height / 2 - 10,
                     0xFFFFFF55
             );
 
@@ -1261,6 +1288,15 @@ public class FlightScreen extends Screen {
          * 가로 가운데 정렬하여 표시한다.
          */
 
+        /*
+         * =========================
+         * 보너스 문구 화면 출력
+         * =========================
+         *
+         * 포인트 획득 시 저장된 문구를
+         * 화면 중앙 위쪽에 출력한다.
+         */
+
         if (bonusMessageTicks > 0) {
 
             int messageColor =
@@ -1280,6 +1316,45 @@ public class FlightScreen extends Screen {
                     messageX,
                     messageY,
                     messageColor
+            );
+        }
+
+        /*
+         * =========================
+         * 시작 전 게임판 미리보기
+         * =========================
+         *
+         * 게임 시작 전 5초 동안
+         * 빨간 통로, 실, 보너스 포인트를
+         * 모두 화면에 표시한다.
+         *
+         * 실제 움직임과 점수 계산은
+         * tick()의 카운트다운 처리에서
+         * 계속 정지된 상태로 유지한다.
+         *
+         * 화면 상단 중앙에 남은 시간을
+         * 출력하여 게임 시작을 안내한다.
+         */
+
+        if (countdownTicks > 0) {
+
+            int countdownSeconds =
+                    (countdownTicks + 19) / 20;
+
+            graphics.drawCenteredString(
+                    this.font,
+                    "START IN",
+                    this.width / 2,
+                    40,
+                    0xFFFFFFFF
+            );
+
+            graphics.drawCenteredString(
+                    this.font,
+                    String.valueOf(countdownSeconds),
+                    this.width / 2,
+                    60,
+                    0xFFFFFF55
             );
         }
     }
