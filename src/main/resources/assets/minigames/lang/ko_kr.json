@@ -38,5 +38,21 @@
   "screen.minigames.path.quality": "품질 : %s",
   "screen.minigames.path.work": "작업량 : %s / %s",
   "screen.minigames.path.disabled": "비활성화 : %s",
-  "screen.minigames.path.completed": "완료 여부 : %s"
+  "screen.minigames.path.completed": "완료 여부 : %s",
+
+  "screen.minigames.path.completed": "완료 여부 : %s",
+
+  "screen.minigames.flight.title": "헬기게임",
+  "screen.minigames.flight.clear": "비행 완료!",
+  "screen.minigames.flight.distance": "이동거리 : %s / %s",
+  "screen.minigames.flight.flight_score": "비행 점수 : %s",
+  "screen.minigames.flight.bonus": "보너스 : %s",
+  "screen.minigames.flight.miss": "실수 : %s",
+  "screen.minigames.flight.final_score": "최종 점수 : %s / %s",
+  "screen.minigames.flight.y_position": "Y 좌표 : %s",
+  "screen.minigames.flight.score": "점수 : %s / %s",
+  "screen.minigames.flight.bonus_yellow": "보너스 +10%!",
+  "screen.minigames.flight.bonus_green": "보너스 +20%!",
+  "screen.minigames.flight.start_in": "시작까지"
+
 }

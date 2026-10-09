@@ -167,6 +167,21 @@ public class FlightScreen extends Screen {
 
     /*
      * =========================
+     * 결과 화면 클릭 보호
+     * =========================
+     *
+     * 클리어 직후 20Tick(1초) 동안
+     * 마우스 클릭으로 화면을 닫지 못하게 한다.
+     *
+     * ESC를 이용한 종료는 제한하지 않는다.
+     */
+
+    private static final int RESULT_CLICK_PROTECTION_TICKS = 20;
+
+    private int resultClickProtectionTicks = RESULT_CLICK_PROTECTION_TICKS;
+
+    /*
+     * =========================
      * 보너스 문구 표시 관리
      * =========================
      *
@@ -212,7 +227,7 @@ public class FlightScreen extends Screen {
     private int pointRespawnCooldownTicks = 0;
 
     public FlightScreen() {
-        super(Component.literal("Flight Game"));
+        super(Component.translatable("screen.minigames.flight.title"));
     }
 
     @Override
@@ -285,6 +300,23 @@ public class FlightScreen extends Screen {
          */
 
         if (gameFinished) {
+
+            /*
+             * =========================
+             * 결과 화면 클릭 보호 시간 감소
+             * =========================
+             *
+             * 게임 물리 계산과 점수 계산은
+             * 계속 정지된 상태를 유지한다.
+             *
+             * 결과 화면 보호 시간만
+             * Tick마다 감소시킨다.
+             */
+
+            if (resultClickProtectionTicks > 0) {
+                resultClickProtectionTicks--;
+            }
+
             return;
         }
 
@@ -457,7 +489,7 @@ public class FlightScreen extends Screen {
              * 실제 화면 출력은 render()에서 처리한다.
              */
 
-            bonusMessage = "보너스 +10%!";
+            bonusMessage = "screen.minigames.flight.bonus_yellow";
             bonusMessageTicks = 20;
         }
 
@@ -597,7 +629,7 @@ public class FlightScreen extends Screen {
              * 새로운 문구로 교체하고 시간을 초기화한다.
              */
 
-            bonusMessage = "보너스 +20%!";
+            bonusMessage = "screen.minigames.flight.bonus_green";
             bonusMessageTicks = 20;
         }
 
@@ -998,9 +1030,20 @@ public class FlightScreen extends Screen {
             int centerX = this.width / 2;
             int centerY = this.height / 2;
 
+            /*
+             * =========================
+             * 게임 클리어 제목
+             * =========================
+             *
+             * 마인크래프트 언어 설정에 따라
+             * 한국어 또는 영어로 표시한다.
+             */
+
             graphics.drawCenteredString(
                     this.font,
-                    "FLIGHT CLEAR!",
+                    Component.translatable(
+                            "screen.minigames.flight.clear"
+                    ),
                     centerX,
                     centerY - 60,
                     0xFFFFD700
@@ -1011,18 +1054,19 @@ public class FlightScreen extends Screen {
              * 실제 이동거리 출력
              * =========================
              *
-             * MISS 상태에서 이동한 거리도
+             * MISS 상태에서 이동한 거리까지
              * 포함한 실제 이동거리를 표시한다.
              *
-             * 오른쪽에는 클리어 목표 거리를 표시한다.
+             * 클리어 기준도 함께 표시한다.
              */
 
             graphics.drawCenteredString(
                     this.font,
-                    "Distance : "
-                            + flightGame.getTraveledDistance()
-                            + " / "
-                            + flightGame.getClearScore(),
+                    Component.translatable(
+                            "screen.minigames.flight.distance",
+                            flightGame.getTraveledDistance(),
+                            flightGame.getClearScore()
+                    ),
                     centerX,
                     centerY - 30,
                     0xFFFFFFFF
@@ -1033,45 +1077,73 @@ public class FlightScreen extends Screen {
              * 정상 비행 획득 점수 출력
              * =========================
              *
-             * 통로 안에서 비행하여
-             * 실제로 획득한 점수만 표시한다.
+             * 통로 내부에서 비행하여
+             * 획득한 점수만 표시한다.
              *
              * 보너스 점수는 포함하지 않는다.
              */
 
             graphics.drawCenteredString(
                     this.font,
-                    "Flight Score : "
-                            + flightGame.getDistanceScore(),
+                    Component.translatable(
+                            "screen.minigames.flight.flight_score",
+                            flightGame.getDistanceScore()
+                    ),
                     centerX,
                     centerY - 45,
                     0xFFFFFFFF
             );
 
+            /*
+             * =========================
+             * 보너스 획득 점수 출력
+             * =========================
+             */
+
             graphics.drawCenteredString(
                     this.font,
-                    "Bonus : "
-                            + flightGame.getBonusScore(),
+                    Component.translatable(
+                            "screen.minigames.flight.bonus",
+                            flightGame.getBonusScore()
+                    ),
                     centerX,
                     centerY - 15,
                     0xFF55FF55
             );
 
+            /*
+             * =========================
+             * MISS 발생 횟수 출력
+             * =========================
+             */
+
             graphics.drawCenteredString(
                     this.font,
-                    "MISS : "
-                            + flightGame.getMissCount(),
+                    Component.translatable(
+                            "screen.minigames.flight.miss",
+                            flightGame.getMissCount()
+                    ),
                     centerX,
                     centerY,
                     0xFFFF5555
             );
 
+            /*
+             * =========================
+             * 최종 점수 및 최대점수 출력
+             * =========================
+             *
+             * 기존 점수 계산값을 그대로 사용한다.
+             * 표시 문구만 번역 파일에서 가져온다.
+             */
+
             graphics.drawCenteredString(
                     this.font,
-                    "FINAL SCORE : "
-                            + flightGame.getCurrentScore()
-                            + " / "
-                            + flightGame.getMaxScore(),
+                    Component.translatable(
+                            "screen.minigames.flight.final_score",
+                            flightGame.getCurrentScore(),
+                            flightGame.getMaxScore()
+                    ),
                     centerX,
                     centerY + 30,
                     0xFFFFFF55
@@ -1247,24 +1319,46 @@ public class FlightScreen extends Screen {
          * =========================
          */
 
+        /*
+         * =========================
+         * 실의 현재 Y 좌표
+         * =========================
+         *
+         * 개발 및 게임 테스트를 위한 좌표다.
+         * 숫자는 기존과 같이 소수점 첫째 자리까지 표시한다.
+         */
+
         graphics.drawString(
                 this.font,
-                "Y : "
-                        + String.format(
-                        "%.1f",
-                        threadY
+                Component.translatable(
+                        "screen.minigames.flight.y_position",
+                        String.format(
+                                java.util.Locale.ROOT,
+                                "%.1f",
+                                threadY
+                        )
                 ),
                 10,
                 10,
                 0xFFFFFFFF
         );
 
+        /*
+         * =========================
+         * 현재 점수 표시
+         * =========================
+         *
+         * 현재 획득 점수와 최대점수를
+         * 마인크래프트 언어 설정에 맞춰 표시한다.
+         */
+
         graphics.drawString(
                 this.font,
-                "Score : "
-                        + flightGame.getCurrentScore()
-                        + " / "
-                        + flightGame.getMaxScore(),
+                Component.translatable(
+                        "screen.minigames.flight.score",
+                        flightGame.getCurrentScore(),
+                        flightGame.getMaxScore()
+                ),
                 10,
                 34,
                 0xFFFFFFFF
@@ -1299,20 +1393,57 @@ public class FlightScreen extends Screen {
 
         if (bonusMessageTicks > 0) {
 
+            /*
+             * =========================
+             * 보너스 번역 문구 생성
+             * =========================
+             *
+             * 저장된 언어 키를 이용해
+             * 현재 마인크래프트 언어 설정에 맞는
+             * 문구를 생성한다.
+             */
+
+            Component translatedBonusMessage =
+                    Component.translatable(bonusMessage);
+
+            /*
+             * =========================
+             * 보너스별 출력 색상 지정
+             * =========================
+             *
+             * 노란색 포인트: 노란색 문구
+             * 초록색 포인트: 초록색 문구
+             *
+             * 화면에 출력되는 실제 문구가 아닌
+             * 번역 키로 색상을 구분한다.
+             */
+
             int messageColor =
-                    bonusMessage.contains("10%")
+                    bonusMessage.equals(
+                            "screen.minigames.flight.bonus_yellow"
+                    )
                             ? 0xFFFFFF00
                             : 0xFF00FF00;
 
+            /*
+             * =========================
+             * 번역 문구 중앙 정렬
+             * =========================
+             *
+             * 한국어와 영어는 글자 폭이 다르므로
+             * 실제 번역된 문구의 길이를 사용한다.
+             */
+
             int messageX =
-                    (this.width - this.font.width(bonusMessage)) / 2;
+                    (this.width
+                            - this.font.width(translatedBonusMessage)) / 2;
 
             int messageY =
                     this.height / 2 - 75;
 
             graphics.drawString(
                     this.font,
-                    bonusMessage,
+                    translatedBonusMessage,
                     messageX,
                     messageY,
                     messageColor
@@ -1341,9 +1472,20 @@ public class FlightScreen extends Screen {
             int countdownSeconds =
                     (countdownTicks + 19) / 20;
 
+            /*
+             * =========================
+             * 카운트다운 시작 안내 문구
+             * =========================
+             *
+             * 남은 시간 숫자는 기존대로 유지한다.
+             * 시작 안내 문구만 언어 파일에서 가져온다.
+             */
+
             graphics.drawCenteredString(
                     this.font,
-                    "START IN",
+                    Component.translatable(
+                            "screen.minigames.flight.start_in"
+                    ),
                     this.width / 2,
                     40,
                     0xFFFFFFFF
@@ -1562,6 +1704,96 @@ public class FlightScreen extends Screen {
         return minY
                 + Math.random()
                 * (maxY - minY);
+    }
+    /*
+     * =========================
+     * 게임 종료 후 마우스 클릭 처리
+     * =========================
+     *
+     * 헬기게임이 진행 중일 때는
+     * 기존 마우스 조작을 유지한다.
+     *
+     * 게임이 클리어되어 결과 화면이
+     * 표시되고 있을 때만
+     * 클릭 한 번으로 화면을 닫는다.
+     *
+     * 좌클릭과 우클릭 모두 허용한다.
+     *
+     * 화면을 닫으면 기존에 플레이하던
+     * 마인크래프트 월드로 돌아간다.
+     *
+     * 점수 및 게임 진행 상태는
+     * 이곳에서 변경하지 않는다.
+     */
+
+    @Override
+    public boolean mouseClicked(
+            double mouseX,
+            double mouseY,
+            int button
+    ) {
+
+        /*
+         * =========================
+         * 결과 화면 클릭 종료
+         * =========================
+         *
+         * gameFinished가 true이면
+         * 이미 게임이 클리어된 상태이다.
+         *
+         * 마우스 버튼을 누르면
+         * 현재 화면을 닫고 월드로 복귀한다.
+         */
+
+        if (gameFinished) {
+
+            /*
+             * =========================
+             * 결과 화면 클릭 보호
+             * =========================
+             *
+             * 클리어 후 1초가 지나지 않았다면
+             * 마우스 클릭을 소비하고
+             * 결과 화면을 그대로 유지한다.
+             */
+
+            if (resultClickProtectionTicks > 0) {
+                return true;
+            }
+
+            /*
+             * =========================
+             * 결과 화면 종료
+             * =========================
+             *
+             * 보호 시간이 끝난 이후에는
+             * 마우스를 클릭하면
+             * 마인크래프트 월드로 복귀한다.
+             */
+
+            this.minecraft.setScreen(null);
+
+            return true;
+        }
+
+        /*
+         * =========================
+         * 기존 클릭 처리 유지
+         * =========================
+         *
+         * 게임 진행 중에는
+         * 기존 Screen의 클릭 처리를 사용한다.
+         *
+         * 헬기 조작에 사용되는
+         * 마우스 버튼 상태 판정은
+         * tick()에서 계속 처리한다.
+         */
+
+        return super.mouseClicked(
+                mouseX,
+                mouseY,
+                button
+        );
     }
 
     @Override

@@ -38,5 +38,21 @@
   "screen.minigames.path.quality": "Quality : %s",
   "screen.minigames.path.work": "Work : %s / %s",
   "screen.minigames.path.disabled": "Disabled : %s",
-  "screen.minigames.path.completed": "Completed : %s"
+
+  "screen.minigames.path.completed": "Completed : %s",
+  "screen.minigames.path.completed": "Completed : %s",
+
+  "screen.minigames.flight.title": "Flight Game",
+  "screen.minigames.flight.clear": "FLIGHT CLEAR!",
+  "screen.minigames.flight.distance": "Distance : %s / %s",
+  "screen.minigames.flight.flight_score": "Flight Score : %s",
+  "screen.minigames.flight.bonus": "Bonus : %s",
+  "screen.minigames.flight.miss": "MISS : %s",
+  "screen.minigames.flight.final_score": "FINAL SCORE : %s / %s",
+  "screen.minigames.flight.y_position": "Y : %s",
+  "screen.minigames.flight.score": "Score : %s / %s",
+  "screen.minigames.flight.bonus_yellow": "Bonus +10%!",
+  "screen.minigames.flight.bonus_green": "Bonus +20%!",
+  "screen.minigames.flight.start_in": "START IN"
+
 }
