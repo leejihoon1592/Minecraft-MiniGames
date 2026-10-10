@@ -52,6 +52,19 @@ public final class WeavingClothRenderer {
     private static final double FLATTEN_START_TICKS = 6.0;
     private static final double FLATTEN_DURATION_TICKS = 2.0;
 
+    /*
+     * =========================
+     * 압착 후 줄 간격 / 두께
+     * =========================
+     *
+     * 베틀이 실을 누른 뒤에는
+     * 줄 간격을 좁혀서
+     * 더 촘촘한 천처럼 보이게 한다.
+     */
+
+    private static final int PACKED_ROW_SPACING = 3;
+    private static final int PACKED_THREAD_THICKNESS = 3;
+
     private WeavingClothRenderer() {
     }
 
@@ -180,7 +193,15 @@ public final class WeavingClothRenderer {
 
             int baseY =
                     clothBottom - 7
-                            - threadIndex * rowSpacing;
+                            - threadIndex * rowSpacing;/*
+             * 베틀로 눌렀을 때의 목표 위치.
+             *
+             * baseY는 원래 줄 위치,
+             * packedY는 압착 후 더 촘촘한 위치다.
+             */
+            int packedY =
+                    clothBottom - 7
+                            - threadIndex * PACKED_ROW_SPACING;
 
             threadIndex++;
 
@@ -293,20 +314,23 @@ public final class WeavingClothRenderer {
                         0.0,
                         Math.min(1.0, flattenProgress)
                 );
+
+
             }
 
             /*
-             * =========================
-             * 불규칙한 실 출력
-             * =========================
-             *
-             * 사인 함수를 이용해
-             * 실이 약간 울퉁불퉁한
-             * 형태가 되도록 한다.
-             *
-             * 이 곡선은 시각적 표현이며
-             * 제작 정확도와 무관하다.
+             * 실의 압착 위치와 두께.
+             * 실 출력 반복문과 같은 범위에서 계산한다.
              */
+            int renderBaseY = (int) Math.round(
+                    baseY + (packedY - baseY) * flattenProgress
+            );
+
+            int renderThickness = (int) Math.round(
+                    THREAD_THICKNESS
+                            + (PACKED_THREAD_THICKNESS - THREAD_THICKNESS)
+                            * flattenProgress
+            );
 
             for (
                     int x = 0;
@@ -351,7 +375,7 @@ public final class WeavingClothRenderer {
                         );
 
                 int drawY =
-                        baseY + waveOffset;
+                        renderBaseY + waveOffset;
 
                 /*
                  * 실제 실 출력.
@@ -361,7 +385,7 @@ public final class WeavingClothRenderer {
                         x,
                         drawY,
                         Math.min(x + DRAW_STEP, headX),
-                        drawY + THREAD_THICKNESS,
+                        drawY + renderThickness,
                         color
                 );
             }
