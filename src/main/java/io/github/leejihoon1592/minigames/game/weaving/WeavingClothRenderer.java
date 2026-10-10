@@ -382,6 +382,21 @@ public final class WeavingClothRenderer {
                         drawY + renderThickness,
                         color
                 );
+
+                /*
+                 * =========================
+                 * 세로 날실 출력
+                 * =========================
+                 *
+                 * 가로 씨실보다 먼저 그린다.
+                 * 따라서 현재는 날실이 씨실 뒤에 놓인다.
+                 */
+                WeavingWarpRenderer.render(
+                        graphics,
+                        width,
+                        clothTop,
+                        clothBottom
+                );
             }
 
             /*
