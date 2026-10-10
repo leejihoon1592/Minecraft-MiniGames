@@ -33,6 +33,7 @@ public final class WeavingRenderer {
         /*
          * 전체 배경
          */
+
         graphics.fill(
                 0, 0, width, height,
                 0xFF000000
@@ -51,20 +52,26 @@ public final class WeavingRenderer {
         int clothTop = 28;
         int clothBottom = Math.min(105, height / 2);
 
-        for (int y = clothTop; y < clothBottom; y += 17) {
+        /*
+         * =========================
+         * 실제 천 제작 애니메이션
+         * =========================
+         *
+         * 상단 실의 이동과 출력은
+         * WeavingClothRenderer가 담당한다.
+         *
+         * 하단 노트 판정 로직에는
+         * 영향을 주지 않는다.
+         */
 
-            graphics.fill(
-                    0, y, width, y + 5, WHITE
-            );
-
-            graphics.fill(
-                    0, y + 5, width, y + 10, RED
-            );
-
-            graphics.fill(
-                    0, y + 10, width, y + 15, BLUE
-            );
-        }
+        WeavingClothRenderer.render(
+                graphics,
+                width,
+                height,
+                game,
+                config,
+                partialTick
+        );
 
         /*
          * =========================
