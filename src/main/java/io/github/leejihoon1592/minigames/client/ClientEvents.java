@@ -159,16 +159,13 @@ public final class ClientEvents {
                 minecraft.setScreen(
                         new FlightScreen()
                 );
-                /*
-                 * V
-                 * Weaving Rhythm Game
-                 */
-                while (OPEN_WEAVING_GAME.consumeClick()) {
 
-                    minecraft.setScreen(
-                            new WeavingScreen()
-                    );
-                }
+            }
+            while (OPEN_WEAVING_GAME.consumeClick()) {
+
+                minecraft.setScreen(
+                        new WeavingScreen()
+                );
             }
         }
     }
