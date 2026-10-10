@@ -75,6 +75,23 @@ public final class WeavingRenderer {
 
         /*
          * =========================
+         * 베틀 누르기 애니메이션
+         * =========================
+         *
+         * 실을 그린 뒤 베틀을 출력하므로
+         * 베틀이 실 위로 내려오는 것처럼 보인다.
+         */
+
+        WeavingLoomRenderer.render(
+                graphics,
+                width,
+                height,
+                game,
+                partialTick
+        );
+
+        /*
+         * =========================
          * 판정기와 노트 위치
          * =========================
          */

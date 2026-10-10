@@ -69,6 +69,17 @@ public final class WeavingScreen extends Screen {
             return;
         }
 
+        /*
+         * 게임 종료 이후에도
+         * 마지막 베틀 애니메이션을 위해
+         * 화면 시간을 계속 진행한다.
+         */
+        if (state == State.FINISHED) {
+
+            game.tick();
+            return;
+        }
+
         if (state != State.PLAYING) {
             return;
         }
@@ -141,7 +152,8 @@ public final class WeavingScreen extends Screen {
         };
 
         double animationTick =
-                state == State.PLAYING
+                (state == State.PLAYING
+                        || state == State.FINISHED)
                         ? partialTick
                         : 0.0;
 

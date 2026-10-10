@@ -1,6 +1,8 @@
 package io.github.leejihoon1592.minigames.game.weaving;
 
+import java.util.Arrays;
 import java.util.List;
+
 
 /**
  * 천 배짜기 게임의 진행과 입력 처리.
@@ -29,6 +31,14 @@ public final class WeavingGame {
     private int missCount = 0;
     private int completedRounds = 0;
 
+    /*
+     * 각 라운드에서 베틀이 눌린 시점.
+     *
+     * 배열의 인덱스는 라운드 번호 - 1이다.
+     * -1은 아직 눌리지 않았다는 뜻이다.
+     */
+    private final int[] loomPressTicks;
+
     public WeavingGame(List<WeavingNote> notes) {
 
         if (notes == null || notes.isEmpty()) {
@@ -38,6 +48,14 @@ public final class WeavingGame {
         }
 
         this.notes = List.copyOf(notes);
+
+        /*
+         * 라운드별 베틀 누르기 시간을 준비한다.
+         */
+        this.loomPressTicks =
+                new int[getTotalRounds()];
+
+        Arrays.fill(loomPressTicks, -1);
     }
 
     /*
@@ -47,6 +65,18 @@ public final class WeavingGame {
      */
 
     public void tick() {
+
+        /*
+         * 게임이 종료되어도 시간은 계속 흐른다.
+         *
+         * 마지막 베틀 누르기 애니메이션이
+         * 도중에 멈추지 않도록 하기 위함이다.
+         */
+        elapsedTicks++;
+
+        if (isFinished()) {
+            return;
+        }
 
         if (isFinished()) {
             return;
@@ -131,7 +161,18 @@ public final class WeavingGame {
          */
         if (note.getType() == WeavingNote.Type.SPACE) {
             completedRounds++;
+
+            /*
+             * HIT와 MISS를 구분하지 않고
+             * 실제로 라운드가 완료된 시간을 저장한다.
+             *
+             * 이후 렌더러가 이 시간을 기준으로
+             * 베틀 애니메이션을 실행한다.
+             */
+            loomPressTicks[note.getRoundNumber() - 1] =
+                    elapsedTicks;
         }
+
 
         nextNoteIndex++;
     }
@@ -171,5 +212,23 @@ public final class WeavingGame {
 
     public int getProcessedNotes() {
         return nextNoteIndex;
+    }
+    /*
+     * =========================
+     * 베틀 누르기 시점 조회
+     * =========================
+     *
+     * 반환값:
+     * -1 = 아직 해당 라운드를 누르지 않음
+     * 0 이상 = 베틀을 누른 게임 시간
+     */
+    public int getLoomPressTick(int roundNumber) {
+
+        if (roundNumber < 1
+                || roundNumber > loomPressTicks.length) {
+            return -1;
+        }
+
+        return loomPressTicks[roundNumber - 1];
     }
 }
