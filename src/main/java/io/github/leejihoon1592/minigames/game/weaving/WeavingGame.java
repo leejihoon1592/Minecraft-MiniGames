@@ -78,8 +78,6 @@ public final class WeavingGame {
             return;
         }
 
-        elapsedTicks++;
-
         /*
          * 입력 가능 시간을 지나친 노트는
          * 자동으로 MISS 처리한다.
