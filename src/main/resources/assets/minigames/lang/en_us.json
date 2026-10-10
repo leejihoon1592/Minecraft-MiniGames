@@ -53,6 +53,8 @@
   "screen.minigames.flight.score": "Score : %s / %s",
   "screen.minigames.flight.bonus_yellow": "Bonus +10%!",
   "screen.minigames.flight.bonus_green": "Bonus +20%!",
-  "screen.minigames.flight.start_in": "START IN"
+  "screen.minigames.flight.start_in": "START IN",
 
+  "key.minigames.weaving_blue": "Weaving - Blue Thread",
+  "key.minigames.weaving_red": "Weaving - Red Thread"
 }

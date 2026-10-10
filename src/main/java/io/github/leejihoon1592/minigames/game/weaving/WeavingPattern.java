@@ -120,8 +120,25 @@ public final class WeavingPattern {
 
                 if (type == WeavingNote.Type.SPACE) {
 
+                    /*
+                     * 스페이스바 노트 이후
+                     * 다음 라운드 시작까지 대기한다.
+                     *
+                     * approachTicks:
+                     * 다음 노트가 화면 오른쪽에서
+                     * 판정기까지 이동하는 시간.
+                     *
+                     * roundGapTicks:
+                     * 스페이스바 이후
+                     * 새로운 노트가 등장하기까지의 대기시간.
+                     *
+                     * 기본 설정:
+                     * 60 + 24 = 84Tick
+                     */
+
                     nextTick +=
-                            config.getRoundGapTicks();
+                            config.getApproachTicks()
+                                    + config.getRoundGapTicks();
 
                 } else {
 

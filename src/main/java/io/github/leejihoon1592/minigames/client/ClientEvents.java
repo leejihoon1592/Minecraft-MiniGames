@@ -81,6 +81,13 @@ public final class ClientEvents {
             event.register(OPEN_PATH_GAME);
             event.register(OPEN_FLIGHT_GAME);
             event.register(OPEN_WEAVING_GAME);
+
+            /*
+             * 천 배짜기 게임 조작키
+             */
+            event.register(WeavingKeyMappings.BLUE_INPUT);
+            event.register(WeavingKeyMappings.RED_INPUT);
+
         }
     }
 
