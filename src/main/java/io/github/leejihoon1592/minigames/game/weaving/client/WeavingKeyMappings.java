@@ -36,4 +36,23 @@ public final class WeavingKeyMappings {
                     GLFW.GLFW_MOUSE_BUTTON_RIGHT,
                     "key.categories.minigames"
             );
+    /*
+     * =========================
+     * 흰색 노트 - 베틀 누르기
+     * =========================
+     *
+     * 기본값: 스페이스바
+     *
+     * 사용자는 키 지정 메뉴에서
+     * 키보드 또는 마우스 버튼으로
+     * 변경할 수 있다.
+     */
+
+    public static final KeyMapping WHITE_INPUT =
+            new KeyMapping(
+                    "key.minigames.weaving_white",
+                    InputConstants.Type.KEYSYM,
+                    GLFW.GLFW_KEY_SPACE,
+                    "key.categories.minigames"
+            );
 }

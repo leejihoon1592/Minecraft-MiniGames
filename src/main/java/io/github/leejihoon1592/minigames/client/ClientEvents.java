@@ -6,6 +6,7 @@ import io.github.leejihoon1592.minigames.game.path.PathScreen;
 import io.github.leejihoon1592.minigames.game.timing.TimingScreen;
 import io.github.leejihoon1592.minigames.game.flight.FlightScreen;
 import io.github.leejihoon1592.minigames.game.weaving.WeavingScreen;
+import io.github.leejihoon1592.minigames.game.weaving.client.WeavingKeyMappings;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
@@ -87,6 +88,7 @@ public final class ClientEvents {
              */
             event.register(WeavingKeyMappings.BLUE_INPUT);
             event.register(WeavingKeyMappings.RED_INPUT);
+            event.register(WeavingKeyMappings.WHITE_INPUT);
 
         }
     }

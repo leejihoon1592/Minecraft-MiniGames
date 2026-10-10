@@ -98,7 +98,7 @@ public final class WeavingScreen extends Screen {
 
             case READY ->
                     Component.literal(
-                            "Click or configured key to start"
+                            "Click or SPACE to start"
                     );
 
             case COUNTDOWN ->
@@ -127,7 +127,12 @@ public final class WeavingScreen extends Screen {
                                     WeavingKeyMappings.RED_INPUT
                                             .getTranslatedKeyMessage()
                             )
-                            .append("]   WHITE [SPACE]");
+                            .append("]   WHITE [")
+                            .append(
+                                    WeavingKeyMappings.WHITE_INPUT
+                                            .getTranslatedKeyMessage()
+                            )
+                            .append("]");
 
             case FINISHED ->
                     Component.literal(
@@ -251,6 +256,22 @@ public final class WeavingScreen extends Screen {
             return true;
         }
 
+        /*
+         * =========================
+         * 흰색 노트 - 베틀 누르기
+         * =========================
+         *
+         * 마우스 버튼으로 설정된 경우에도
+         * 해당 버튼으로 흰색 노트를 처리한다.
+         */
+
+        if (WeavingKeyMappings.WHITE_INPUT
+                .matchesMouse(button)) {
+
+            submitInput(WeavingNote.Type.SPACE);
+            return true;
+        }
+
         return super.mouseClicked(
                 mouseX,
                 mouseY,
@@ -264,12 +285,28 @@ public final class WeavingScreen extends Screen {
      * =========================
      */
 
+    /*
+     * =========================
+     * 키보드 입력 처리
+     * =========================
+     *
+     * 게임 시작:
+     * 스페이스바 고정
+     *
+     * 게임 진행:
+     * 사용자가 설정한 키 사용
+     */
+
     @Override
     public boolean keyPressed(
             int keyCode,
             int scanCode,
             int modifiers
     ) {
+
+        /*
+         * 현재 설정된 입력키 확인
+         */
 
         boolean bluePressed =
                 WeavingKeyMappings.BLUE_INPUT.matches(
@@ -283,15 +320,27 @@ public final class WeavingScreen extends Screen {
                         scanCode
                 );
 
+        boolean whitePressed =
+                WeavingKeyMappings.WHITE_INPUT.matches(
+                        keyCode,
+                        scanCode
+                );
+
         /*
-         * 준비 상태에서는 설정된 키나
-         * 스페이스바로 시작할 수 있다.
+         * =========================
+         * 게임 시작
+         * =========================
+         *
+         * 흰색 노트의 키 설정과 관계없이
+         * 스페이스바로 게임을 시작한다.
+         *
+         * 마우스 클릭으로 시작하는 기능은
+         * mouseClicked()에서 처리한다.
          */
+
         if (state == State.READY) {
 
-            if (bluePressed
-                    || redPressed
-                    || keyCode == GLFW.GLFW_KEY_SPACE) {
+            if (keyCode == GLFW.GLFW_KEY_SPACE) {
 
                 startCountdown();
                 return true;
@@ -299,12 +348,19 @@ public final class WeavingScreen extends Screen {
         }
 
         /*
-         * 카운트다운 도중 입력은 무시한다.
+         * =========================
+         * 카운트다운
+         * =========================
+         *
+         * 카운트다운 중에는
+         * 노트 입력을 처리하지 않는다.
          */
+
         if (state == State.COUNTDOWN) {
 
             if (bluePressed
                     || redPressed
+                    || whitePressed
                     || keyCode == GLFW.GLFW_KEY_SPACE) {
 
                 return true;
@@ -312,24 +368,30 @@ public final class WeavingScreen extends Screen {
         }
 
         /*
-         * 실제 게임 플레이
+         * =========================
+         * 실제 게임 진행
+         * =========================
          */
+
         if (state == State.PLAYING) {
 
             /*
-             * 흰 노트는 기존대로
-             * 스페이스바를 사용한다.
+             * 흰색 노트
+             *
+             * 이제 고정 스페이스바가 아니라
+             * 현재 설정된 키로 판정한다.
              */
-            if (keyCode == GLFW.GLFW_KEY_SPACE) {
+
+            if (whitePressed) {
 
                 submitInput(WeavingNote.Type.SPACE);
                 return true;
             }
 
             /*
-             * 파란 노트:
-             * 설정된 키보드 입력
+             * 파란색 노트
              */
+
             if (bluePressed) {
 
                 submitInput(WeavingNote.Type.LEFT);
@@ -337,9 +399,9 @@ public final class WeavingScreen extends Screen {
             }
 
             /*
-             * 빨간 노트:
-             * 설정된 키보드 입력
+             * 빨간색 노트
              */
+
             if (redPressed) {
 
                 submitInput(WeavingNote.Type.RIGHT);
