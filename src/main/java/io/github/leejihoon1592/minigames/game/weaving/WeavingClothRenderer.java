@@ -44,15 +44,6 @@ public final class WeavingClothRenderer {
     private static final int DRAW_STEP = 2;
 
     /*
-     * 베틀이 내려와 실을 누르는 시점.
-     *
-     * 현재 WeavingLoomRenderer의
-     * 하강 6틱, 유지 2틱과 맞춘 값.
-     */
-    private static final double FLATTEN_START_TICKS = 6.0;
-    private static final double FLATTEN_DURATION_TICKS = 2.0;
-
-    /*
      * =========================
      * 압착 후 줄 간격 / 두께
      * =========================
@@ -299,6 +290,15 @@ public final class WeavingClothRenderer {
                             note.getRoundNumber()
                     );
 
+
+            /*
+             * 베틀 하강과 실 압착 동기화.
+             *
+             * 베틀이 내려오는 진행률을
+             * 실의 위치, 두께, 굴곡에도 똑같이 적용한다.
+             *
+             * 하강 완료 후에는 압착 상태를 유지한다.
+             */
             double flattenProgress = 0.0;
 
             if (pressTick >= 0) {
@@ -307,15 +307,9 @@ public final class WeavingClothRenderer {
                         currentTime - pressTick;
 
                 flattenProgress =
-                        (pressAge - FLATTEN_START_TICKS)
-                                / FLATTEN_DURATION_TICKS;
-
-                flattenProgress = Math.max(
-                        0.0,
-                        Math.min(1.0, flattenProgress)
-                );
-
-
+                        WeavingLoomRenderer.getCompressionProgress(
+                                pressAge
+                        );
             }
 
             /*

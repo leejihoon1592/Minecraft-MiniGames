@@ -34,6 +34,34 @@ public final class WeavingLoomRenderer {
     private WeavingLoomRenderer() {
     }
 
+    /*
+     * =========================
+     * 베틀 하강 / 실 압착 공통 진행률
+     * =========================
+     *
+     * 0.0 = 하강 시작
+     * 1.0 = 베틀이 아래에 도착
+     *
+     * 하강 완료 후에는 1.0을 유지하여
+     * 실이 다시 벌어지지 않도록 한다.
+     */
+    public static double getCompressionProgress(
+            double animationAge
+    ) {
+
+        if (animationAge <= 0.0) {
+            return 0.0;
+        }
+
+        if (animationAge >= DOWN_TICKS) {
+            return 1.0;
+        }
+
+        double t = animationAge / DOWN_TICKS;
+
+        return 1.0 - Math.pow(1.0 - t, 3.0);
+    }
+
     public static void render(
             GuiGraphics graphics,
             int width,
@@ -121,15 +149,8 @@ public final class WeavingLoomRenderer {
 
         if (animationAge < DOWN_TICKS) {
 
-            double t =
-                    animationAge / DOWN_TICKS;
-
-            /*
-             * 하강할 때 점점 감속한다.
-             * 아래에 닿을 때 무게감이 생긴다.
-             */
             progress =
-                    1.0 - Math.pow(1.0 - t, 3.0);
+                    getCompressionProgress(animationAge);
 
         } else if (
                 animationAge
