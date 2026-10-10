@@ -78,10 +78,6 @@ public final class WeavingGame {
             return;
         }
 
-        if (isFinished()) {
-            return;
-        }
-
         elapsedTicks++;
 
         /*

@@ -43,6 +43,15 @@ public final class WeavingClothRenderer {
      */
     private static final int DRAW_STEP = 2;
 
+    /*
+     * 베틀이 내려와 실을 누르는 시점.
+     *
+     * 현재 WeavingLoomRenderer의
+     * 하강 6틱, 유지 2틱과 맞춘 값.
+     */
+    private static final double FLATTEN_START_TICKS = 6.0;
+    private static final double FLATTEN_DURATION_TICKS = 2.0;
+
     private WeavingClothRenderer() {
     }
 
@@ -249,6 +258,45 @@ public final class WeavingClothRenderer {
 
             /*
              * =========================
+             * 베틀에 의한 실 정렬
+             * =========================
+             *
+             * 각 실은 자신이 속한 라운드의
+             * 베틀 누르기 시간을 확인한다.
+             *
+             * 아직 누르지 않았다면
+             * 구불구불한 모양을 유지한다.
+             *
+             * 베틀이 바닥에 닿으면
+             * 2틱 동안 실이 평평해진다.
+             *
+             * HIT와 MISS는 구분하지 않는다.
+             */
+
+            int pressTick =
+                    game.getLoomPressTick(
+                            note.getRoundNumber()
+                    );
+
+            double flattenProgress = 0.0;
+
+            if (pressTick >= 0) {
+
+                double pressAge =
+                        currentTime - pressTick;
+
+                flattenProgress =
+                        (pressAge - FLATTEN_START_TICKS)
+                                / FLATTEN_DURATION_TICKS;
+
+                flattenProgress = Math.max(
+                        0.0,
+                        Math.min(1.0, flattenProgress)
+                );
+            }
+
+            /*
+             * =========================
              * 불규칙한 실 출력
              * =========================
              *
@@ -286,9 +334,20 @@ public final class WeavingClothRenderer {
                                         + threadIndex * 0.65
                         ) * 1.0;
 
+                /*
+                 * 정렬이 진행될수록
+                 * 실의 굴곡을 줄인다.
+                 *
+                 * flattenProgress = 0.0
+                 * → 원래 구불구불한 실
+                 *
+                 * flattenProgress = 1.0
+                 * → 완전히 평평한 실
+                 */
                 int waveOffset =
                         (int) Math.round(
-                                wave1 + wave2
+                                (wave1 + wave2)
+                                        * (1.0 - flattenProgress)
                         );
 
                 int drawY =
