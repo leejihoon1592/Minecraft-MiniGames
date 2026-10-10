@@ -170,8 +170,8 @@ public final class WeavingClothRenderer {
              */
 
             int baseY =
-                    clothTop + 4
-                            + threadIndex * rowSpacing;
+                    clothBottom - 7
+                            - threadIndex * rowSpacing;
 
             threadIndex++;
 
@@ -183,7 +183,7 @@ public final class WeavingClothRenderer {
              * 화면 스크롤 방식으로 확장할 수 있다.
              */
 
-            if (baseY >= clothBottom) {
+            if (baseY < clothTop + 4) {
                 continue;
             }
 
