@@ -105,19 +105,6 @@ public final class WeavingClothRenderer {
         );
 
         /*
-         * 세로 날실 출력.
-         *
-         * 매 프레임 한 번만 그린다.
-         * 가로 씨실보다 먼저 출력한다.
-         */
-        WeavingWarpRenderer.render(
-                graphics,
-                width,
-                clothTop,
-                clothBottom
-        );
-
-        /*
          * =========================
          * 실 개수 확인
          * =========================
