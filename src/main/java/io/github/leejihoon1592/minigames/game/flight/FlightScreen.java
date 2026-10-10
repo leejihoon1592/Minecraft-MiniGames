@@ -678,8 +678,16 @@ public class FlightScreen extends Screen {
          * =========================
          */
 
-        previousCorridorScroll =
-                corridorScroll;
+        /*
+         * =========================
+         * 스크롤 위치 갱신
+         * =========================
+         *
+         * 이전 스크롤 위치는 렌더링 보간에 사용한다.
+         *
+         * 매 Tick마다 기존 속도만큼 이동하며
+         * 중복 대입은 제거한다.
+         */
 
         previousCorridorScroll =
                 corridorScroll;
@@ -722,23 +730,57 @@ public class FlightScreen extends Screen {
          * 현재 스크롤 위치를 함께 사용한다.
          */
 
-        double corridorCenterAtThread =
+        /*
+         * =========================
+         * 실의 좌우 끝 통로 중심 계산
+         * =========================
+         *
+         * 실은 6×6 사각형이므로
+         * 왼쪽 X 위치 하나만 검사하지 않는다.
+         *
+         * 실의 왼쪽과 오른쪽 위치에서
+         * 각각 빨간 통로 중심을 계산한다.
+         */
+
+        double corridorCenterLeft =
                 getCorridorCenterY(
                         corridorScroll + PLAYER_X_OFFSET
                 );
 
+        double corridorCenterRight =
+                getCorridorCenterY(
+                        corridorScroll
+                                + PLAYER_X_OFFSET
+                                + THREAD_WIDTH
+                );
+
         /*
-         * 현재 실 위치에서의
-         * 빨간 통로 위쪽과 아래쪽 경계
+         * =========================
+         * 실 전체가 들어갈 수 있는 경계 계산
+         * =========================
+         *
+         * 위쪽 경계는 더 낮은 쪽의 Y값을 사용한다.
+         * 아래쪽 경계는 더 높은 쪽의 Y값을 사용한다.
+         *
+         * 화면 Y 좌표는 아래쪽으로 증가하므로
+         * 위쪽에서는 Math.max(),
+         * 아래쪽에서는 Math.min()을 사용한다.
+         *
+         * 이 방식으로 통로 경사 구간에서도
+         * 실 전체가 빨간 통로 안에 있는지 판정한다.
          */
 
         double corridorTop =
-                corridorCenterAtThread
-                        - CORRIDOR_HALF_HEIGHT;
+                Math.max(
+                        corridorCenterLeft,
+                        corridorCenterRight
+                ) - CORRIDOR_HALF_HEIGHT;
 
         double corridorBottom =
-                corridorCenterAtThread
-                        + CORRIDOR_HALF_HEIGHT;
+                Math.min(
+                        corridorCenterLeft,
+                        corridorCenterRight
+                ) + CORRIDOR_HALF_HEIGHT;
 
         /*
          * =========================
@@ -975,8 +1017,22 @@ public class FlightScreen extends Screen {
          * 다음 Tick부터는 게임 진행이 정지된다.
          */
 
+        /*
+         * =========================
+         * 게임 클리어 판정
+         * =========================
+         *
+         * 1. 실제 이동거리가 목표에 도달하면 종료한다.
+         * 2. 현재 점수가 최대점수에 도달하면 조기 종료한다.
+         *
+         * 최대점수는 고정 숫자가 아닌
+         * FlightGame의 계산 결과를 사용한다.
+         */
+
         if (flightGame.getTraveledDistance()
-                >= flightGame.getClearScore()) {
+                >= flightGame.getClearScore()
+                || flightGame.getCurrentScore()
+                >= flightGame.getMaxScore()) {
 
             gameFinished = true;
         }
@@ -1327,36 +1383,6 @@ public class FlightScreen extends Screen {
 
         /*
          * =========================
-         * 테스트 정보
-         * =========================
-         */
-
-        /*
-         * =========================
-         * 실의 현재 Y 좌표
-         * =========================
-         *
-         * 개발 및 게임 테스트를 위한 좌표다.
-         * 숫자는 기존과 같이 소수점 첫째 자리까지 표시한다.
-         */
-
-        graphics.drawString(
-                this.font,
-                Component.translatable(
-                        "screen.minigames.flight.y_position",
-                        String.format(
-                                java.util.Locale.ROOT,
-                                "%.1f",
-                                threadY
-                        )
-                ),
-                10,
-                10,
-                0xFFFFFFFF
-        );
-
-        /*
-         * =========================
          * 현재 점수 표시
          * =========================
          *
@@ -1648,38 +1674,75 @@ public class FlightScreen extends Screen {
                         previousY
                                 + differenceY * progress;
 
-                int renderX =
-                        (int) Math.round(x);
-
-                int renderY =
-                        (int) Math.round(y);
-
                 /*
-                 * 화면 밖에 있는 기록은
-                 * 실제 렌더링을 생략한다.
+                 * =========================
+                 * 잔상 중심 좌표 계산
+                 * =========================
+                 *
+                 * 실의 이동 기록은 중심 좌표를 사용한다.
+                 *
+                 * 잔상은 4×4 사각형이므로
+                 * 가로와 세로에서 각각 2픽셀을 빼서
+                 * 기록된 중심 좌표와 일치시킨다.
                  */
 
-                if (renderX < 0
+                int renderX =
+                        (int) Math.round(x) - 2;
+
+                int renderY =
+                        (int) Math.round(y) - 2;
+
+                /*
+                 * =========================
+                 * 흰색 실보다 앞선 잔상 제거
+                 * =========================
+                 *
+                 * 잔상은 현재 흰색 실의
+                 * 왼쪽에만 남아야 한다.
+                 *
+                 * 흰색 실의 시작 X 좌표는
+                 * PLAYER_X_OFFSET이다.
+                 *
+                 * 잔상 오른쪽 끝이
+                 * 실의 왼쪽 경계를 넘으면
+                 * 해당 잔상 픽셀은 출력하지 않는다.
+                 *
+                 * 이 처리로 최신 Tick의 잔상이
+                 * 현재 실보다 앞서 보이는 문제를 막는다.
+                 */
+
+                if (renderX + 4 > PLAYER_X_OFFSET) {
+                    continue;
+                }
+
+                /*
+                 * =========================
+                 * 화면 밖 잔상 출력 방지
+                 * =========================
+                 */
+
+                if (renderX + 4 <= 0
                         || renderX >= this.width
-                        || renderY < 0
+                        || renderY + 4 <= 0
                         || renderY >= this.height) {
                     continue;
                 }
 
                 /*
                  * =========================
-                 * 잔상 픽셀 출력
+                 * 잔상 렌더링
                  * =========================
                  *
-                 * 현재 실과 구분되도록
-                 * 옅은 회백색을 사용한다.
+                 * 크기: 4×4픽셀
+                 * 색상: 회색
                  *
-                 * 잔상 두께는 2픽셀이다.
+                 * 기록된 실의 이동 경로를
+                 * 흰색 실의 뒤쪽에만 출력한다.
                  */
 
                 graphics.fill(
-                        renderX,
-                        renderY,
+                        Math.max(renderX, 0),
+                        Math.max(renderY, 0),
                         Math.min(renderX + 4, this.width),
                         Math.min(renderY + 4, this.height),
                         0xFFAAAAAA

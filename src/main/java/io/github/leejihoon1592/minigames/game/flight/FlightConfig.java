@@ -75,7 +75,7 @@ public final class FlightConfig {
 
     public static final double POINT_SCROLL_SPEED = 5.0;
 
-    public static final double MIN_POINT_GAP = 240.0;
+    public static final double MIN_POINT_GAP = 400.0;
 
     /*
      * =========================
