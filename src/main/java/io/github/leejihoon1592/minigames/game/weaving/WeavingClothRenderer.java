@@ -53,7 +53,7 @@ public final class WeavingClothRenderer {
      * 더 촘촘한 천처럼 보이게 한다.
      */
 
-    private static final int PACKED_ROW_SPACING = 3;
+    private static final int PACKED_ROW_SPACING = 4;
     private static final int PACKED_THREAD_THICKNESS = 3;
 
     private WeavingClothRenderer() {
@@ -442,67 +442,77 @@ public final class WeavingClothRenderer {
                  * 틈 이후 남은 부분 출력
                  */
                 if (segmentStart < segmentEnd) {
+                    /*
+                     * =========================
+                     * 가로 씨실 출력
+                     * =========================
+                     *
+                     * 씨실을 가로 방향으로 잘라내지 않는다.
+                     *
+                     * 직조 조직은 줄 사이의 1픽셀 간격과
+                     * 날실 교차 무늬로 표현한다.
+                     */
+                }
                     graphics.fill(
-                            segmentStart,
+                            x,
                             drawY,
-                            segmentEnd,
+                            Math.min(x + DRAW_STEP, headX),
                             drawY + renderThickness,
                             color
                     );
+
+
                 }
 
+                /*
+                 * =========================
+                 * 직물 교차 무늬 출력
+                 * =========================
+                 *
+                 * 베틀 압착이 완료된 가로 실에만
+                 * 날실과 씨실의 교차 무늬를 그린다.
+                 *
+                 * 가로 실 출력 반복문 바깥에서
+                 * 딱 한 번 호출한다.
+                 *
+                 * threadIndex는 이미 1 증가했으므로
+                 * 실제 가로 실 번호는 threadIndex - 1이다.
+                 */
+                if (flattenProgress >= 1.0) {
 
-            }
+                    WeavingWarpRenderer.renderCrossings(
+                            graphics,
+                            width,
+                            headX,
+                            renderBaseY,
+                            renderThickness,
+                            threadIndex - 1
+                    );
+                }
 
-            /*
-             * =========================
-             * 직물 교차 무늬 출력
-             * =========================
-             *
-             * 베틀 압착이 완료된 가로 실에만
-             * 날실과 씨실의 교차 무늬를 그린다.
-             *
-             * 가로 실 출력 반복문 바깥에서
-             * 딱 한 번 호출한다.
-             *
-             * threadIndex는 이미 1 증가했으므로
-             * 실제 가로 실 번호는 threadIndex - 1이다.
-             */
-            if (flattenProgress >= 1.0) {
+                /*
+                 * =========================
+                 * 움직이는 실 끝부분
+                 * =========================
+                 *
+                 * 이동 중인 실의 끝을
+                 * 조금 두껍게 표시한다.
+                 *
+                 * 오른쪽 끝까지 이동하면
+                 * 끝부분 표시를 제거한다.
+                 */
 
-                WeavingWarpRenderer.renderCrossings(
-                        graphics,
-                        width,
-                        headX,
-                        renderBaseY,
-                        renderThickness,
-                        threadIndex - 1
-                );
-            }
+                if (progress > 0.0
+                        && progress < 1.0) {
 
-            /*
-             * =========================
-             * 움직이는 실 끝부분
-             * =========================
-             *
-             * 이동 중인 실의 끝을
-             * 조금 두껍게 표시한다.
-             *
-             * 오른쪽 끝까지 이동하면
-             * 끝부분 표시를 제거한다.
-             */
-
-            if (progress > 0.0
-                    && progress < 1.0) {
-
-                graphics.fill(
-                        headX - 2,
-                        baseY - 3,
-                        headX + 2,
-                        baseY + 4,
-                        color
-                );
+                    graphics.fill(
+                            headX - 2,
+                            baseY - 3,
+                            headX + 2,
+                            baseY + 4,
+                            color
+                    );
+                }
             }
         }
     }
-}
