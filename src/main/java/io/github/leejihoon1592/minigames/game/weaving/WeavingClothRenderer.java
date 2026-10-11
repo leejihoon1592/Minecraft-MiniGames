@@ -391,13 +391,65 @@ public final class WeavingClothRenderer {
                  * 실제 실 출력.
                  */
 
-                graphics.fill(
-                        x,
-                        drawY,
-                        Math.min(x + DRAW_STEP, headX),
-                        drawY + renderThickness,
-                        color
+                /*
+                 * =========================
+                 * 실제 실 출력
+                 * =========================
+                 *
+                 * 날실이 지나가는 위치에서는
+                 * 씨실을 1픽셀 비워
+                 * 직조 느낌을 만든다.
+                 */
+                int segmentStart = x;
+                int segmentEnd = Math.min(
+                        x + DRAW_STEP,
+                        headX
                 );
+
+                /*
+                 * 현재 구간 안에
+                 * 날실 틈 위치가 있는지 확인한다.
+                 */
+                boolean gapDrawn = false;
+
+                for (int px = segmentStart; px < segmentEnd; px++) {
+
+                    if (WeavingWarpRenderer.shouldLeaveWeftGap(px)) {
+
+                        /*
+                         * 틈 왼쪽 부분 출력
+                         */
+                        if (px > segmentStart) {
+                            graphics.fill(
+                                    segmentStart,
+                                    drawY,
+                                    px,
+                                    drawY + renderThickness,
+                                    color
+                            );
+                        }
+
+                        /*
+                         * 틈 이후 위치로 이동
+                         */
+                        segmentStart = px + 1;
+                        gapDrawn = true;
+                        break;
+                    }
+                }
+
+                /*
+                 * 틈 이후 남은 부분 출력
+                 */
+                if (segmentStart < segmentEnd) {
+                    graphics.fill(
+                            segmentStart,
+                            drawY,
+                            segmentEnd,
+                            drawY + renderThickness,
+                            color
+                    );
+                }
 
 
             }

@@ -9,6 +9,7 @@ import net.minecraft.client.gui.GuiGraphics;
  *
  * 1. 고정된 세로 날실 출력
  * 2. 압착된 가로 씨실과 교차 무늬 출력
+ * 3. 날실 위치 정보 제공
  *
  * 노트 판정과 점수는 담당하지 않는다.
  */
@@ -20,12 +21,68 @@ public final class WeavingWarpRenderer {
      * =========================
      */
 
-    private static final int WARP_COLOR = 0xFFE4C94B;
+    private static final int BRIGHT_WARP_COLOR = 0xFFE4C94B;
+    private static final int DARK_WARP_COLOR = 0xFFC2A12E;
 
+    private static final int WARP_START_X = 12;
     private static final int WARP_SPACING = 12;
     private static final int WARP_THICKNESS = 2;
 
     private WeavingWarpRenderer() {
+    }
+
+    /*
+     * =========================
+     * 외부 참조용 설정값
+     * =========================
+     */
+
+    public static int getWarpStartX() {
+        return WARP_START_X;
+    }
+
+    public static int getWarpSpacing() {
+        return WARP_SPACING;
+    }
+
+    public static int getWarpThickness() {
+        return WARP_THICKNESS;
+    }
+
+    /*
+     * =========================
+     * 날실 색상 선택
+     * =========================
+     *
+     * 짝수 날실 = 밝은 노랑
+     * 홀수 날실 = 짙은 노랑
+     */
+    public static int getWarpColor(int warpIndex) {
+
+        if (warpIndex % 2 == 0) {
+            return BRIGHT_WARP_COLOR;
+        }
+
+        return DARK_WARP_COLOR;
+    }
+
+    /*
+     * =========================
+     * 특정 X좌표가
+     * 씨실 틈 위치인지 확인
+     * =========================
+     *
+     * 날실 중심부가 지나가는 자리에서
+     * 씨실을 1픽셀 비워 직조 느낌을 만든다.
+     */
+    public static boolean shouldLeaveWeftGap(int x) {
+
+        if (x < WARP_START_X) {
+            return false;
+        }
+
+        int offset = x - WARP_START_X;
+        return offset % WARP_SPACING == 0;
     }
 
     /*
@@ -45,9 +102,11 @@ public final class WeavingWarpRenderer {
             int clothBottom
     ) {
 
+        int warpIndex = 0;
+
         for (
-                int x = 12;
-                x < width - 12;
+                int x = WARP_START_X;
+                x < width - WARP_START_X;
                 x += WARP_SPACING
         ) {
 
@@ -56,8 +115,10 @@ public final class WeavingWarpRenderer {
                     clothTop + 3,
                     x + WARP_THICKNESS,
                     clothBottom,
-                    WARP_COLOR
+                    getWarpColor(warpIndex)
             );
+
+            warpIndex++;
         }
     }
 
@@ -81,41 +142,18 @@ public final class WeavingWarpRenderer {
             int rowIndex
     ) {
 
-        /*
-         * 아직 가로 실이 없는 경우
-         * 교차 무늬를 그리지 않는다.
-         */
         if (headX <= 0 || rowThickness <= 0) {
             return;
         }
 
-        /*
-         * 날실 번호.
-         */
         int warpIndex = 0;
 
-        /*
-         * =========================
-         * 교차 지점 확인
-         * =========================
-         *
-         * 홀수 / 짝수 위치를 이용해
-         * 날실이 씨실 위로 나오는 부분을
-         * 번갈아 선택한다.
-         */
         for (
-                int x = 12;
-                x < width - 12 && x < headX;
+                int x = WARP_START_X;
+                x < width - WARP_START_X && x < headX;
                 x += WARP_SPACING
         ) {
 
-            /*
-             * 가로 실 번호와 날실 번호의
-             * 합이 짝수일 때 날실을 위에 그린다.
-             *
-             * 다음 가로 실은 자동으로
-             * 반대 교차 패턴을 가진다.
-             */
             boolean warpOnTop =
                     (rowIndex + warpIndex) % 2 == 0;
 
@@ -129,7 +167,7 @@ public final class WeavingWarpRenderer {
                                 headX
                         ),
                         rowY + rowThickness,
-                        WARP_COLOR
+                        getWarpColor(warpIndex)
                 );
             }
 
