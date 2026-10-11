@@ -26,7 +26,7 @@ public final class WeavingWarpRenderer {
 
     private static final int WARP_START_X = 12;
     private static final int WARP_SPACING = 12;
-    private static final int WARP_THICKNESS = 2;
+    private static final int WARP_THICKNESS = 3;
 
     private WeavingWarpRenderer() {
     }
