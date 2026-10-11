@@ -103,6 +103,22 @@ public final class WeavingClothRenderer {
                 clothTop,
                 WHITE
         );
+        /*
+         * =========================
+         * 세로 날실 출력
+         * =========================
+         *
+         * 렌더링 프레임마다 단 한 번 실행한다.
+         *
+         * 가로 실의 반복문이 시작되기 전에
+         * 날실을 먼저 그려 성능 저하를 방지한다.
+         */
+        WeavingWarpRenderer.render(
+                graphics,
+                width,
+                clothTop,
+                clothBottom
+        );
 
         /*
          * =========================
@@ -383,20 +399,7 @@ public final class WeavingClothRenderer {
                         color
                 );
 
-                /*
-                 * =========================
-                 * 세로 날실 출력
-                 * =========================
-                 *
-                 * 가로 씨실보다 먼저 그린다.
-                 * 따라서 현재는 날실이 씨실 뒤에 놓인다.
-                 */
-                WeavingWarpRenderer.render(
-                        graphics,
-                        width,
-                        clothTop,
-                        clothBottom
-                );
+
             }
 
             /*
