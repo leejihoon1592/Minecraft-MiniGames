@@ -404,6 +404,32 @@ public final class WeavingClothRenderer {
 
             /*
              * =========================
+             * 직물 교차 무늬 출력
+             * =========================
+             *
+             * 베틀 압착이 완료된 가로 실에만
+             * 날실과 씨실의 교차 무늬를 그린다.
+             *
+             * 가로 실 출력 반복문 바깥에서
+             * 딱 한 번 호출한다.
+             *
+             * threadIndex는 이미 1 증가했으므로
+             * 실제 가로 실 번호는 threadIndex - 1이다.
+             */
+            if (flattenProgress >= 1.0) {
+
+                WeavingWarpRenderer.renderCrossings(
+                        graphics,
+                        width,
+                        headX,
+                        renderBaseY,
+                        renderThickness,
+                        threadIndex - 1
+                );
+            }
+
+            /*
+             * =========================
              * 움직이는 실 끝부분
              * =========================
              *
