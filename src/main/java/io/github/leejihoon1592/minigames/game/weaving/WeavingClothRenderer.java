@@ -387,6 +387,8 @@ public final class WeavingClothRenderer {
                 int drawY =
                         renderBaseY + waveOffset;
 
+
+
                 /*
                  * 실제 실 출력.
                  */
@@ -400,69 +402,21 @@ public final class WeavingClothRenderer {
                  * 씨실을 1픽셀 비워
                  * 직조 느낌을 만든다.
                  */
-                int segmentStart = x;
-                int segmentEnd = Math.min(
-                        x + DRAW_STEP,
-                        headX
+                /*
+                 * 빨강·파랑 가로실을 끊김 없이 출력한다.
+                 *
+                 * 날실과의 교차 무늬는
+                 * 아래 renderCrossings에서 따로 처리한다.
+                 */
+                graphics.fill(
+                        x,
+                        drawY,
+                        Math.min(x + DRAW_STEP, headX),
+                        drawY + renderThickness,
+                        color
                 );
 
-                /*
-                 * 현재 구간 안에
-                 * 날실 틈 위치가 있는지 확인한다.
-                 */
-                boolean gapDrawn = false;
-
-                for (int px = segmentStart; px < segmentEnd; px++) {
-
-                    if (WeavingWarpRenderer.shouldLeaveWeftGap(px)) {
-
-                        /*
-                         * 틈 왼쪽 부분 출력
-                         */
-                        if (px > segmentStart) {
-                            graphics.fill(
-                                    segmentStart,
-                                    drawY,
-                                    px,
-                                    drawY + renderThickness,
-                                    color
-                            );
-                        }
-
-                        /*
-                         * 틈 이후 위치로 이동
-                         */
-                        segmentStart = px + 1;
-                        gapDrawn = true;
-                        break;
-                    }
-                }
-
-                /*
-                 * 틈 이후 남은 부분 출력
-                 */
-                if (segmentStart < segmentEnd) {
-                    /*
-                     * =========================
-                     * 가로 씨실 출력
-                     * =========================
-                     *
-                     * 씨실을 가로 방향으로 잘라내지 않는다.
-                     *
-                     * 직조 조직은 줄 사이의 1픽셀 간격과
-                     * 날실 교차 무늬로 표현한다.
-                     */
-                }
-                    graphics.fill(
-                            x,
-                            drawY,
-                            Math.min(x + DRAW_STEP, headX),
-                            drawY + renderThickness,
-                            color
-                    );
-
-
-                }
+            } // 가로실 출력 반복문 종료
 
                 /*
                  * =========================
