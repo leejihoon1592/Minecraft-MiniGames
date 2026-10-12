@@ -40,7 +40,6 @@
   "screen.minigames.path.disabled": "Disabled : %s",
 
   "screen.minigames.path.completed": "Completed : %s",
-  "screen.minigames.path.completed": "Completed : %s",
 
   "screen.minigames.flight.title": "Flight Game",
   "screen.minigames.flight.clear": "FLIGHT CLEAR!",
@@ -57,5 +56,30 @@
 
   "key.minigames.weaving_blue": "Weaving - Blue Thread",
   "key.minigames.weaving_red": "Weaving - Red Thread",
-  "key.minigames.weaving_white": "Weaving - Loom Press"
+  "key.minigames.weaving_white": "Weaving - Loom Press",
+
+  "screen.minigames.weaving.title": "Weaving Game",
+  "screen.minigames.weaving.ready": "Click or SPACE to start",
+  "screen.minigames.weaving.countdown": "START IN %s",
+  "screen.minigames.weaving.controls": "BLUE [%s]   RED [%s]   WHITE [%s]",
+  "screen.minigames.weaving.finished": "FINISHED",
+
+  "screen.minigames.weaving.round": "ROUND %s / %s",
+  "screen.minigames.weaving.score": "SCORE %s / %s",
+  "screen.minigames.weaving.hit_miss": "HIT %s   MISS %s",
+
+  "screen.minigames.weaving.fantastic": "FANTASTIC",
+  "screen.minigames.weaving.perfect": "PERFECT",
+  "screen.minigames.weaving.good": "GOOD",
+  "screen.minigames.weaving.miss": "MISS",
+
+  "screen.minigames.weaving.result.title": "Weaving Result",
+  "screen.minigames.weaving.result.clear": "WEAVING CLEAR!",
+  "screen.minigames.weaving.result.final_score": "FINAL SCORE : %s / %s",
+  "screen.minigames.weaving.result.fantastic": "Fantastic : %s",
+  "screen.minigames.weaving.result.perfect": "Perfect : %s",
+  "screen.minigames.weaving.result.good": "Good : %s",
+  "screen.minigames.weaving.result.miss": "Miss : %s",
+  "screen.minigames.weaving.result.wait": "PLEASE WAIT...",
+  "screen.minigames.weaving.result.close": "CLICK TO CLOSE"
 }

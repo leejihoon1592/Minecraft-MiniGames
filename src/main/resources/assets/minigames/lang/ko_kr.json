@@ -38,7 +38,6 @@
   "screen.minigames.path.quality": "품질 : %s",
   "screen.minigames.path.work": "작업량 : %s / %s",
   "screen.minigames.path.disabled": "비활성화 : %s",
-  "screen.minigames.path.completed": "완료 여부 : %s",
 
   "screen.minigames.path.completed": "완료 여부 : %s",
 
@@ -57,5 +56,30 @@
 
   "key.minigames.weaving_blue": "배짜기 - 파란 실",
   "key.minigames.weaving_red": "배짜기 - 빨간 실",
-  "key.minigames.weaving_white": "배짜기 - 베틀 누르기"
+  "key.minigames.weaving_white": "배짜기 - 베틀 누르기",
+
+  "screen.minigames.weaving.title": "배짜기 게임",
+  "screen.minigames.weaving.ready": "클릭 또는 SPACE로 시작",
+  "screen.minigames.weaving.countdown": "시작까지 %s",
+  "screen.minigames.weaving.controls": "파랑 [%s]   빨강 [%s]   흰색 [%s]",
+  "screen.minigames.weaving.finished": "완료",
+
+  "screen.minigames.weaving.round": "라운드 %s / %s",
+  "screen.minigames.weaving.score": "점수 %s / %s",
+  "screen.minigames.weaving.hit_miss": "성공 %s   실수 %s",
+
+  "screen.minigames.weaving.fantastic": "Fantastic",
+  "screen.minigames.weaving.perfect": "Perfect",
+  "screen.minigames.weaving.good": "Good",
+  "screen.minigames.weaving.miss": "Miss",
+
+  "screen.minigames.weaving.result.title": "배짜기 결과",
+  "screen.minigames.weaving.result.clear": "배짜기 완료!",
+  "screen.minigames.weaving.result.final_score": "최종 점수 : %s / %s",
+  "screen.minigames.weaving.result.fantastic": "Fantastic : %s",
+  "screen.minigames.weaving.result.perfect": "Perfect : %s",
+  "screen.minigames.weaving.result.good": "Good : %s",
+  "screen.minigames.weaving.result.miss": "Miss : %s",
+  "screen.minigames.weaving.result.wait": "잠시 기다려 주세요...",
+  "screen.minigames.weaving.result.close": "클릭하여 닫기"
 }
