@@ -42,15 +42,15 @@ public final class WeavingRenderer {
     private static final int NOTE_OUTLINE_RADIUS = 16;
 
     /*
-     * 연타 스택의 세로 높이 차이.
+     * 연타 스택의 가로 겹침 간격.
      *
-     * 앞쪽 노드는 원래 판정선 높이에 놓고
-     * 뒤쪽 노드일수록 위로 올린다.
+     * 가장 먼저 눌러야 하는 노드를 맨 앞에 두고
+     * 뒤에 오는 노드들을 오른쪽으로 조금씩 겹쳐서 출력한다.
      *
-     * 가로 좌표는 원래 노트 시간에 맞춰
-     * 그대로 이동시킨다.
+     * 세로로 올리지 않고
+     * 같은 높이에서 일자 형태로 겹치게 만든다.
      */
-    private static final int STACK_OFFSET_Y = 7;
+    private static final int STACK_OFFSET_X = 12;
 
     private WeavingRenderer() {
     }
@@ -417,12 +417,7 @@ public final class WeavingRenderer {
          */
         int frontIndex = -1;
 
-        for (
-                int i = groupStart;
-                i < groupEnd;
-                i++
-        ) {
-
+        for (int i = groupStart; i < groupEnd; i++) {
             if (notes.get(i).isWaiting()) {
                 frontIndex = i;
                 break;
@@ -430,21 +425,32 @@ public final class WeavingRenderer {
         }
 
         /*
-         * 묶음 전체가 처리됐다면
-         * 화면에 그릴 노드가 없다.
+         * 전부 처리된 묶음이면 그리지 않는다.
          */
         if (frontIndex < 0) {
             return;
         }
 
         /*
-         * 뒤쪽 노드부터 앞쪽 노드 순서로 출력.
+         * 가장 먼저 눌러야 하는 노드의 기준 X좌표.
+         *
+         * 나머지 연타 노드들은
+         * 이 좌표를 기준으로 오른쪽으로 조금씩 겹쳐서 출력한다.
          */
-        for (
-                int i = groupEnd - 1;
-                i >= frontIndex;
-                i--
-        ) {
+        int frontNoteX = (int) Math.round(
+                hitX
+                        + (notes.get(frontIndex).getTargetTick() - currentTime)
+                        * pixelsPerTick
+        );
+
+        /*
+         * 뒤쪽 노드부터 먼저 그리고
+         * 앞쪽 노드를 마지막에 그린다.
+         *
+         * 그래야 겹쳐 보일 때
+         * 앞 노드가 가장 위에 보인다.
+         */
+        for (int i = groupEnd - 1; i >= frontIndex; i--) {
 
             WeavingNote note = notes.get(i);
 
@@ -453,43 +459,27 @@ public final class WeavingRenderer {
             }
 
             /*
-             * 노드의 X좌표는 원래 판정 시간을 따른다.
-             *
-             * 스택을 만들려고 X좌표를 강제로 줄이면
-             * 화면상 노드 위치와 판정 시간이
-             * 어긋날 수 있으므로 변경하지 않는다.
-             */
-            int noteX = (int) Math.round(
-                    hitX
-                            + (note.getTargetTick() - currentTime)
-                            * pixelsPerTick
-            );
-
-            /*
-             * 화면 바깥 노드는 출력하지 않는다.
-             */
-            if (noteX < -20 || noteX > width + 20) {
-                continue;
-            }
-
-            /*
-             * 가장 먼저 입력할 노드는
-             * 원래 판정선 높이를 유지한다.
-             *
-             * 그 뒤에 있는 노드는
-             * 하나씩 위로 올라간다.
-             *
-             * 앞의 노드가 처리되면
-             * 다음 노드가 새로운 맨 앞이 된다.
+             * 앞 노드는 맨 왼쪽,
+             * 뒤 노드는 오른쪽으로 조금씩 겹친다.
              */
             int layer = i - frontIndex;
 
-            int drawY =
-                    laneY - layer * STACK_OFFSET_Y;
+            int noteX =
+                    frontNoteX + layer * STACK_OFFSET_X;
 
             /*
-             * 노드 종류에 따른 색상.
+             * 세로로 올리지 않고
+             * 모두 같은 높이에 놓는다.
              */
+            int drawY = laneY;
+
+            /*
+             * 화면 밖이면 그리지 않는다.
+             */
+            if (noteX < -40 || noteX > width + 40) {
+                continue;
+            }
+
             int color = switch (note.getType()) {
                 case LEFT -> BLUE;
                 case RIGHT -> RED;
@@ -497,9 +487,7 @@ public final class WeavingRenderer {
             };
 
             /*
-             * =========================
              * 노드 본체
-             * =========================
              */
             drawFilledCircle(
                     graphics,
@@ -510,23 +498,20 @@ public final class WeavingRenderer {
             );
 
             /*
-             * =========================
-             * 흰색 외곽선
-             * =========================
+             * 파랑 / 빨강만 흰색 테두리 출력
              *
-             * 노드마다 개별적으로 그린다.
-             *
-             * 뒤에 있는 노드를 먼저 그리고
-             * 앞에 있는 노드를 나중에 그리므로
-             * 외곽선도 자연스럽게 겹쳐진다.
+             * 흰색 SPACE 노드는
+             * 테두리를 그리지 않는다.
              */
-            drawCircleOutline(
-                    graphics,
-                    noteX,
-                    drawY,
-                    NOTE_OUTLINE_RADIUS,
-                    WHITE
-            );
+            if (note.getType() != WeavingNote.Type.SPACE) {
+                drawCircleOutline(
+                        graphics,
+                        noteX,
+                        drawY,
+                        NOTE_OUTLINE_RADIUS,
+                        WHITE
+                );
+            }
         }
     }
 

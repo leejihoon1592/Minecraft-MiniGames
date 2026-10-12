@@ -54,7 +54,10 @@ public final class WeavingGame {
      */
     private int getHitWindowTicks(int noteIndex) {
 
-        int window = HIT_WINDOW_TICKS;
+        /*
+         * 기본 판정 범위는 유지한다.
+         */
+        int nearestGap = Integer.MAX_VALUE;
 
         int targetTick =
                 notes.get(noteIndex).getTargetTick();
@@ -67,15 +70,10 @@ public final class WeavingGame {
             int previousTick =
                     notes.get(noteIndex - 1).getTargetTick();
 
-            int gap = targetTick - previousTick;
-
-            if (gap > 0) {
-
-                window = Math.min(
-                        window,
-                        Math.max(1, (gap - 1) / 2)
-                );
-            }
+            nearestGap = Math.min(
+                    nearestGap,
+                    targetTick - previousTick
+            );
         }
 
         /*
@@ -86,18 +84,28 @@ public final class WeavingGame {
             int nextTick =
                     notes.get(noteIndex + 1).getTargetTick();
 
-            int gap = nextTick - targetTick;
-
-            if (gap > 0) {
-
-                window = Math.min(
-                        window,
-                        Math.max(1, (gap - 1) / 2)
-                );
-            }
+            nearestGap = Math.min(
+                    nearestGap,
+                    nextTick - targetTick
+            );
         }
 
-        return window;
+        /*
+         * 연타 구간은 판정을 너무 좁게 만들지 않는다.
+         *
+         * 기존 방식은 3틱 연타에서
+         * 사실상 1틱 판정까지 줄어들 수 있어서
+         * 연타 중 하나가 MISS 나는 현상이 있었다.
+         */
+        if (nearestGap <= 3) {
+            return 2;
+        }
+
+        if (nearestGap <= 6) {
+            return 3;
+        }
+
+        return HIT_WINDOW_TICKS;
     }
 
     public WeavingGame(List<WeavingNote> notes) {
