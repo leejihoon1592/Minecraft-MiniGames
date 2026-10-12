@@ -92,16 +92,23 @@ public final class WeavingRenderer {
          *
          * 판정 시간과 점수는 변경하지 않는다.
          */
+        /*
+         * 화면에 보이는 판정 원 크기는 기존대로 유지한다.
+         *
+         * 실제 판정 범위는 WeavingGame에서 별도로 계산한다.
+         * 화면 원: 4 / 6 / 8
+         * 실제 판정: 2 / 3 / 4
+         */
         int fantasticRadius = (int) Math.round(
-                WeavingGame.FANTASTIC_WINDOW_TICKS * pixelsPerTick
+                4 * pixelsPerTick
         ) - 1;
 
         int perfectRadius = (int) Math.round(
-                WeavingGame.PERFECT_WINDOW_TICKS * pixelsPerTick
+                6 * pixelsPerTick
         ) - 1;
 
         int goodRadius = (int) Math.round(
-                WeavingGame.GOOD_WINDOW_TICKS * pixelsPerTick
+                8 * pixelsPerTick
         ) - 1;
 
         /*
