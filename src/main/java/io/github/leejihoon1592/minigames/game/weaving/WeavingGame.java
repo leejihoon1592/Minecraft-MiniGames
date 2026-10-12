@@ -459,6 +459,8 @@ public final class WeavingGame {
         return nextNoteIndex;
     }
 
+
+
     /*
      * =========================
      * 판정별 기록 조회

@@ -34,6 +34,8 @@ public final class WeavingScreen extends Screen {
 
     private State state = State.READY;
 
+    private boolean resultScreenOpened = false;
+
     private int countdownTicks = COUNTDOWN_TICKS;
 
     public WeavingScreen() {
@@ -89,6 +91,24 @@ public final class WeavingScreen extends Screen {
         if (game.isFinished()) {
             state = State.FINISHED;
         }
+
+        /*
+         * =========================
+         * 결과창 전환
+         * =========================
+         *
+         * 게임이 끝났으면
+         * 결과창을 한 번만 연다.
+         */
+        if (state == State.FINISHED
+                && !resultScreenOpened
+                && this.minecraft != null) {
+
+            resultScreenOpened = true;
+            this.minecraft.setScreen(
+                    new WeavingResultScreen(game)
+            );
+        }
     }
 
     /*
@@ -104,6 +124,8 @@ public final class WeavingScreen extends Screen {
             int mouseY,
             float partialTick
     ) {
+
+        this.renderBackground(graphics);
 
         Component message = switch (state) {
 
