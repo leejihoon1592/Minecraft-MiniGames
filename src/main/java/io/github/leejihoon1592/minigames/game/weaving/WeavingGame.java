@@ -39,6 +39,67 @@ public final class WeavingGame {
      */
     private final int[] loomPressTicks;
 
+    /*
+     * =========================
+     * 노드별 판정 허용 시간
+     * =========================
+     *
+     * 일반 노드는 기존 ±5틱을 유지한다.
+     *
+     * 노드 간격이 짧아질수록
+     * 판정 허용 범위도 자동으로 좁아진다.
+     *
+     * 연속 노드가 서로의 판정 시간을
+     * 침범하지 않도록 하기 위한 기능이다.
+     */
+    private int getHitWindowTicks(int noteIndex) {
+
+        int window = HIT_WINDOW_TICKS;
+
+        int targetTick =
+                notes.get(noteIndex).getTargetTick();
+
+        /*
+         * 이전 노드와의 간격 확인
+         */
+        if (noteIndex > 0) {
+
+            int previousTick =
+                    notes.get(noteIndex - 1).getTargetTick();
+
+            int gap = targetTick - previousTick;
+
+            if (gap > 0) {
+
+                window = Math.min(
+                        window,
+                        Math.max(1, (gap - 1) / 2)
+                );
+            }
+        }
+
+        /*
+         * 다음 노드와의 간격 확인
+         */
+        if (noteIndex + 1 < notes.size()) {
+
+            int nextTick =
+                    notes.get(noteIndex + 1).getTargetTick();
+
+            int gap = nextTick - targetTick;
+
+            if (gap > 0) {
+
+                window = Math.min(
+                        window,
+                        Math.max(1, (gap - 1) / 2)
+                );
+            }
+        }
+
+        return window;
+    }
+
     public WeavingGame(List<WeavingNote> notes) {
 
         if (notes == null || notes.isEmpty()) {
@@ -89,9 +150,10 @@ public final class WeavingGame {
 
             if (elapsedTicks
                     <= note.getTargetTick()
-                    + HIT_WINDOW_TICKS) {
+                    + getHitWindowTicks(nextNoteIndex)) {
                 break;
             }
+
 
             note.markMiss();
             missCount++;
@@ -128,7 +190,7 @@ public final class WeavingGame {
                         elapsedTicks - note.getTargetTick()
                 );
 
-        if (timingDifference > HIT_WINDOW_TICKS) {
+        if (timingDifference > getHitWindowTicks(nextNoteIndex)) {
             return false;
         }
 

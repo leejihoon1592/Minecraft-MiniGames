@@ -89,6 +89,23 @@ public final class WeavingPattern {
 
         /*
          * =========================
+         * 연속 입력 테스트 간격
+         * =========================
+         *
+         * 기본 정박 12틱의 1/4 간격이다.
+         *
+         * 현재 설정에서는 3틱이므로
+         * 같은 색 노드를 0.15초 간격으로 입력한다.
+         *
+         * 추후 난이도 설정에서 조정한다.
+         */
+        int rapidTicks = Math.max(
+                3,
+                beatTicks / 4
+        );
+
+        /*
+         * =========================
          * 연습용 라운드 구성
          * =========================
          *
@@ -107,18 +124,28 @@ public final class WeavingPattern {
         RhythmGroup[][] rounds = {
 
                 {
+                        /*
+                         * 3라운드 연타 테스트
+                         *
+                         * 파랑 3연타
+                         * → 빨강 3연타
+                         * → 흰색 베틀 누르기
+                         *
+                         * 각 노드는 독립 판정이다.
+                         */
                         new RhythmGroup(
                                 WeavingNote.Type.LEFT,
-                                2,
-                                beatTicks,
+                                3,
+                                rapidTicks,
                                 beatTicks
                         ),
                         new RhythmGroup(
                                 WeavingNote.Type.RIGHT,
-                                1,
-                                beatTicks,
+                                3,
+                                rapidTicks,
                                 beatTicks
                         )
+
                 },
 
                 {
