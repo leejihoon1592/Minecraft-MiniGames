@@ -60,6 +60,11 @@ public final class WeavingScreen extends Screen {
     @Override
     public void tick() {
 
+        /*
+         * =========================
+         * 카운트다운 진행
+         * =========================
+         */
         if (state == State.COUNTDOWN) {
 
             countdownTicks--;
@@ -72,42 +77,69 @@ public final class WeavingScreen extends Screen {
         }
 
         /*
-         * 게임 종료 이후에도
-         * 마지막 베틀 애니메이션을 위해
-         * 화면 시간을 계속 진행한다.
+         * =========================
+         * 게임 종료 처리
+         * =========================
+         *
+         * 마지막 노드가 끝난 뒤에도
+         * 베틀 압착 애니메이션을 재생한다.
+         *
+         * 압착 애니메이션 전체 시간:
+         * 16틱 = 약 0.8초
          */
         if (state == State.FINISHED) {
 
             game.tick();
+
+            /*
+             * 마지막 라운드에서
+             * 베틀을 누른 시간을 가져온다.
+             */
+            int lastPressTick =
+                    game.getLoomPressTick(
+                            game.getTotalRounds()
+                    );
+
+            /*
+             * 마지막 베틀 애니메이션이 끝나고
+             * 아직 결과창을 열지 않았다면
+             * 새로운 결과창으로 전환한다.
+             */
+            if (!resultScreenOpened
+                    && this.minecraft != null
+                    && lastPressTick >= 0
+                    && game.getElapsedTicks() - lastPressTick >= 16) {
+
+                resultScreenOpened = true;
+
+                this.minecraft.setScreen(
+                        new WeavingResultScreen(game)
+                );
+            }
+
             return;
         }
 
+        /*
+         * =========================
+         * 실제 게임 진행
+         * =========================
+         */
         if (state != State.PLAYING) {
             return;
         }
 
         game.tick();
 
+        /*
+         * 모든 노드가 처리되었다면
+         * FINISHED 상태로 변경한다.
+         *
+         * 결과창 전환은 위의
+         * FINISHED 처리 구역에서 진행한다.
+         */
         if (game.isFinished()) {
             state = State.FINISHED;
-        }
-
-        /*
-         * =========================
-         * 결과창 전환
-         * =========================
-         *
-         * 게임이 끝났으면
-         * 결과창을 한 번만 연다.
-         */
-        if (state == State.FINISHED
-                && !resultScreenOpened
-                && this.minecraft != null) {
-
-            resultScreenOpened = true;
-            this.minecraft.setScreen(
-                    new WeavingResultScreen(game)
-            );
         }
     }
 
@@ -124,8 +156,6 @@ public final class WeavingScreen extends Screen {
             int mouseY,
             float partialTick
     ) {
-
-        this.renderBackground(graphics);
 
         Component message = switch (state) {
 
@@ -169,7 +199,7 @@ public final class WeavingScreen extends Screen {
 
             case FINISHED ->
                     Component.literal(
-                            "FINISHED - Click to Close"
+                            "FINISHED"
                     );
         };
 
@@ -259,12 +289,17 @@ public final class WeavingScreen extends Screen {
         }
 
         /*
-         * 종료 상태:
-         * 클릭하면 화면 닫기
+         * =========================
+         * 결과창 전환 대기
+         * =========================
+         *
+         * 마지막 베틀 애니메이션이 진행 중에는
+         * 클릭해도 게임 화면을 닫지 않는다.
+         *
+         * 실제 종료 클릭은
+         * WeavingResultScreen에서 처리한다.
          */
         if (state == State.FINISHED) {
-
-            this.onClose();
             return true;
         }
 
