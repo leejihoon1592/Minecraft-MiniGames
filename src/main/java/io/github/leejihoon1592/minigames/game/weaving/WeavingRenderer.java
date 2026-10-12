@@ -146,13 +146,20 @@ public final class WeavingRenderer {
         );
         graphics.drawString(
                 font,
-                "ROUND " + currentRound + " / " + game.getTotalRounds(),
+                Component.translatable(
+                        "screen.minigames.weaving.round",
+                        currentRound,
+                        game.getTotalRounds()
+                ),
                 10, 10, WHITE,
                 false
         );
 
-        String scoreLine = "SCORE "
-                + game.getTotalScore() + " / " + game.getMaximumScore();
+        Component scoreLine = Component.translatable(
+                "screen.minigames.weaving.score",
+                game.getTotalScore(),
+                game.getMaximumScore()
+        );
         graphics.drawString(
                 font, scoreLine,
                 Math.max(10, width - font.width(scoreLine) - 10),
@@ -163,7 +170,11 @@ public final class WeavingRenderer {
         /* 기존 하단 HIT / MISS 안내도 유지한다. */
         graphics.drawString(
                 font,
-                "HIT " + game.getHitCount() + "   MISS " + game.getMissCount(),
+                Component.translatable(
+                        "screen.minigames.weaving.hit_miss",
+                        game.getHitCount(),
+                        game.getMissCount()
+                ),
                 10, height - 17, WHITE,
                 false
         );
@@ -186,7 +197,10 @@ public final class WeavingRenderer {
                 case NONE -> WHITE;
             };
 
-            String feedbackText = judgement.name();
+            Component feedbackText = Component.translatable(
+                    "screen.minigames.weaving."
+                            + judgement.name().toLowerCase(Locale.ROOT)
+            );
             /*
              * 판정 결과를 가운데 정렬해서 출력한다.
              *
