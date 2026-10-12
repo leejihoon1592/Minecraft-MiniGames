@@ -157,7 +157,10 @@ public final class WeavingScreen extends Screen {
             float partialTick
     ) {
 
+        this.renderBackground(graphics);
+
         Component message = switch (state) {
+
 
             case READY ->
                     Component.literal(

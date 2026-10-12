@@ -57,9 +57,9 @@ public final class WeavingGame {
      * 이 값은 나중에 난이도에 따라
      * 조정할 수 있도록 분리했다.
      */
-    public static final int FANTASTIC_WINDOW_TICKS = 4;
-    public static final int PERFECT_WINDOW_TICKS = 6;
-    public static final int GOOD_WINDOW_TICKS = 8;
+    public static final int FANTASTIC_WINDOW_TICKS = 2;
+    public static final int PERFECT_WINDOW_TICKS = 3;
+    public static final int GOOD_WINDOW_TICKS = 4;
 
     /*
      * =========================
