@@ -40,7 +40,7 @@ public final class WeavingScreen extends Screen {
 
     public WeavingScreen() {
 
-        super(Component.literal("Weaving Game"));
+        super(Component.translatable("screen.minigames.weaving.title"));
 
         this.config =
                 WeavingConfig.defaultConfig();
@@ -161,48 +161,47 @@ public final class WeavingScreen extends Screen {
 
         Component message = switch (state) {
 
-
+            /*
+             * 게임 시작 안내
+             */
             case READY ->
-                    Component.literal(
-                            "Click or SPACE to start"
+                    Component.translatable(
+                            "screen.minigames.weaving.ready"
                     );
 
+            /*
+             * 카운트다운
+             */
             case COUNTDOWN ->
-                    Component.literal(
-                            "START IN "
-                                    + Math.max(
+                    Component.translatable(
+                            "screen.minigames.weaving.countdown",
+                            Math.max(
                                     1,
                                     (countdownTicks + 19) / 20
                             )
                     );
 
             /*
-             * 현재 실제 키 설정을 읽는다.
-             *
-             * 마우스 좌클릭 -> D키로 바꾸었다면
-             * BLUE 안내에도 D가 표시된다.
+             * 현재 사용자가 설정한 키를 읽어서
+             * 번역된 안내 문구에 넣는다.
              */
             case PLAYING ->
-                    Component.literal("BLUE [")
-                            .append(
-                                    WeavingKeyMappings.BLUE_INPUT
-                                            .getTranslatedKeyMessage()
-                            )
-                            .append("]   RED [")
-                            .append(
-                                    WeavingKeyMappings.RED_INPUT
-                                            .getTranslatedKeyMessage()
-                            )
-                            .append("]   WHITE [")
-                            .append(
-                                    WeavingKeyMappings.WHITE_INPUT
-                                            .getTranslatedKeyMessage()
-                            )
-                            .append("]");
+                    Component.translatable(
+                            "screen.minigames.weaving.controls",
+                            WeavingKeyMappings.BLUE_INPUT
+                                    .getTranslatedKeyMessage(),
+                            WeavingKeyMappings.RED_INPUT
+                                    .getTranslatedKeyMessage(),
+                            WeavingKeyMappings.WHITE_INPUT
+                                    .getTranslatedKeyMessage()
+                    );
 
+            /*
+             * 게임 종료 안내
+             */
             case FINISHED ->
-                    Component.literal(
-                            "FINISHED"
+                    Component.translatable(
+                            "screen.minigames.weaving.finished"
                     );
         };
 
