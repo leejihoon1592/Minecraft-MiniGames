@@ -89,21 +89,22 @@ public final class WeavingRenderer {
                 (double) (width - hitX - 14) / config.getApproachTicks();
 
         /*
-         * 실제 판정 시간 범위 × 1틱당 이동 픽셀 수 = 원의 반지름.
-         * 이것이 중요하다: 그려진 원과 게임 판정이 서로 달라지지 않는다.
+         * 판정 원의 시각적 반지름을
+         * 기존보다 각각 1픽셀 줄인다.
          *
-         * 현재 3틱 연타의 판정 구역은 겹친다.
-         * WeavingGame은 입력 시 맨 앞의 미처리 노드를 우선한다.
+         * 판정 시간과 점수는 변경하지 않는다.
          */
         int fantasticRadius = (int) Math.round(
                 WeavingGame.FANTASTIC_WINDOW_TICKS * pixelsPerTick
-        );
+        ) - 1;
+
         int perfectRadius = (int) Math.round(
                 WeavingGame.PERFECT_WINDOW_TICKS * pixelsPerTick
-        );
+        ) - 1;
+
         int goodRadius = (int) Math.round(
                 WeavingGame.GOOD_WINDOW_TICKS * pixelsPerTick
-        );
+        ) - 1;
 
         /*
          * 기존 판정기 중심 세로선은 그대로 둔다.
