@@ -57,9 +57,9 @@ public final class WeavingGame {
      * 이 값은 나중에 난이도에 따라
      * 조정할 수 있도록 분리했다.
      */
-    public static final int FANTASTIC_WINDOW_TICKS = 2;
-    public static final int PERFECT_WINDOW_TICKS = 4;
-    public static final int GOOD_WINDOW_TICKS = 6;
+    public static final int FANTASTIC_WINDOW_TICKS = 5;
+    public static final int PERFECT_WINDOW_TICKS = 7;
+    public static final int GOOD_WINDOW_TICKS = 9;
 
     /*
      * =========================
@@ -289,13 +289,15 @@ public final class WeavingGame {
                 calculateJudgement(timingDifference);
 
         /*
-         * Good 바깥에서 들어온 입력은
-         * 아직 HIT로 처리하지 않는다.
+         * Good 판정 범위 밖에서
+         * 현재 노드에 해당하는 키를 누르면
+         * 즉시 MISS 처리하고 다음 노드로 진행한다.
          *
-         * 시간이 지나면 tick()에서
-         * 자동으로 MISS 처리된다.
+         * 아무것도 누르지 않고 지나간 경우에는
+         * 기존 tick()이 자동으로 MISS 처리한다.
          */
         if (judgement == Judgement.MISS) {
+            registerMiss(note);
             return false;
         }
 

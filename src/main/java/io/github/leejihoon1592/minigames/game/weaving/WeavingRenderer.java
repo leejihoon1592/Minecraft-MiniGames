@@ -141,7 +141,8 @@ public final class WeavingRenderer {
         graphics.drawString(
                 font,
                 "ROUND " + currentRound + " / " + game.getTotalRounds(),
-                10, 10, WHITE
+                10, 10, WHITE,
+                false
         );
 
         String scoreLine = "SCORE "
@@ -149,14 +150,16 @@ public final class WeavingRenderer {
         graphics.drawString(
                 font, scoreLine,
                 Math.max(10, width - font.width(scoreLine) - 10),
-                10, WHITE
+                10, WHITE,
+                false
         );
 
         /* 기존 하단 HIT / MISS 안내도 유지한다. */
         graphics.drawString(
                 font,
                 "HIT " + game.getHitCount() + "   MISS " + game.getMissCount(),
-                10, height - 17, WHITE
+                10, height - 17, WHITE,
+                false
         );
 
         /*
@@ -178,20 +181,33 @@ public final class WeavingRenderer {
             };
 
             String feedbackText = judgement.name();
-            graphics.drawCenteredString(
-                    font, feedbackText, hitX,
+            /*
+             * 판정 결과를 가운데 정렬해서 출력한다.
+             *
+             * 마지막 false는 글씨 그림자 제거 옵션이다.
+             */
+            graphics.drawString(
+                    font,
+                    feedbackText,
+                    hitX - font.width(feedbackText) / 2,
                     Math.max(24, laneY - goodRadius - 13),
-                    feedbackColor
+                    feedbackColor,
+                    false
             );
         }
 
-        /* READY / COUNTDOWN / PLAYING / FINISHED 메시지 유지 */
-        graphics.drawCenteredString(
+        /*
+         * 게임 안내 메시지.
+         *
+         * 그림자 없이 가로 중앙에 정렬한다.
+         */
+        graphics.drawString(
                 font,
                 message,
-                width / 2,
+                (width - font.width(message)) / 2,
                 Math.min(height - 35, laneY + 36),
-                WHITE
+                WHITE,
+                false
         );
     }
 
@@ -379,7 +395,18 @@ public final class WeavingRenderer {
         graphics.pose().pushPose();
         graphics.pose().translate(centerX, centerY, 0);
         graphics.pose().scale(scale, scale, 1.0F);
-        graphics.drawCenteredString(font, label, 0, -4, color);
+        /*
+         * 실제 할당된 키 이름을 노드 중앙에 출력.
+         * 그림자는 사용하지 않는다.
+         */
+        graphics.drawString(
+                font,
+                label,
+                -font.width(label) / 2,
+                -4,
+                color,
+                false
+        );
         graphics.pose().popPose();
     }
 
