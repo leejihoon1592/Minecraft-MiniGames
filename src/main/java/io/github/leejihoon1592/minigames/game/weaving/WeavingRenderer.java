@@ -68,8 +68,6 @@ public final class WeavingRenderer {
             double partialTick,
             Component message
     ) {
-        /* 전체 배경 */
-        graphics.fill(0, 0, width, height, 0xFF000000);
 
         /* 기존 천 제작 및 베틀 애니메이션은 변경하지 않는다. */
         WeavingClothRenderer.render(
