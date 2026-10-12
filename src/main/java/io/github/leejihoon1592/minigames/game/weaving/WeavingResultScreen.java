@@ -23,7 +23,7 @@ public class WeavingResultScreen extends Screen {
     private int clickGuardTicks = 20;
 
     public WeavingResultScreen(WeavingGame game) {
-        super(Component.literal("Weaving Result"));
+        super(Component.translatable("screen.minigames.weaving.result.title"));
         this.game = game;
     }
 
@@ -89,29 +89,62 @@ public class WeavingResultScreen extends Screen {
 
         this.renderBackground(graphics);
 
-        String title = "WEAVING CLEAR!";
-        String scoreLine =
-                "FINAL SCORE : "
-                        + game.getTotalScore()
-                        + " / "
-                        + game.getMaximumScore();
+        /*
+         * =========================
+         * 결과창 언어 파일 연결
+         * =========================
+         *
+         * 현재 마인크래프트의 언어 설정에 따라
+         * 영어 또는 한국어 문구를 가져온다.
+         *
+         * 점수 계산 및 기존 화면 배치는 변경하지 않는다.
+         */
 
-        String fantasticLine =
-                "Fantastic : " + game.getFantasticCount();
+        /* 결과창 제목 */
+        String title = Component.translatable(
+                "screen.minigames.weaving.result.clear"
+        ).getString();
 
-        String perfectLine =
-                "Perfect : " + game.getPerfectCount();
+        /* 최종 점수 */
+        String scoreLine = Component.translatable(
+                "screen.minigames.weaving.result.final_score",
+                game.getTotalScore(),
+                game.getMaximumScore()
+        ).getString();
 
-        String goodLine =
-                "Good : " + game.getGoodCount();
+        /* Fantastic 판정 횟수 */
+        String fantasticLine = Component.translatable(
+                "screen.minigames.weaving.result.fantastic",
+                game.getFantasticCount()
+        ).getString();
 
-        String missLine =
-                "Miss : " + game.getMissCount();
+        /* Perfect 판정 횟수 */
+        String perfectLine = Component.translatable(
+                "screen.minigames.weaving.result.perfect",
+                game.getPerfectCount()
+        ).getString();
 
-        String closeLine =
-                (clickGuardTicks > 0)
-                        ? "PLEASE WAIT..."
-                        : "CLICK TO CLOSE";
+        /* Good 판정 횟수 */
+        String goodLine = Component.translatable(
+                "screen.minigames.weaving.result.good",
+                game.getGoodCount()
+        ).getString();
+
+        /* Miss 판정 횟수 */
+        String missLine = Component.translatable(
+                "screen.minigames.weaving.result.miss",
+                game.getMissCount()
+        ).getString();
+
+        /*
+         * 1초 클릭 보호 시간에는 대기 문구 표시.
+         * 보호 시간이 끝나면 클릭 종료 안내 표시.
+         */
+        String closeLine = Component.translatable(
+                clickGuardTicks > 0
+                        ? "screen.minigames.weaving.result.wait"
+                        : "screen.minigames.weaving.result.close"
+        ).getString();
 
         int centerX = this.width / 2;
         int y = 40;
